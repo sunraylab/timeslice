@@ -1,6 +1,6 @@
 # Timeline module in go
 
-Timeline module provides 3 packages
+Timeline module provides 2 packages
 
 - Duration : which is an extension of the default time.Duration package.
 - TimeSlice : TimeSlice represents a range of times bounded by two dates (time.Time) From and To. It accepts infinite boundaries (zero times) and can be chronological or anti-chronological.
@@ -56,14 +56,35 @@ In addition a TimeSlice provides advanced features:
 - a TimeSlice can be splitted in sub timelices of a specified duration
 - you can get the exact time at a selected progress rate within the timeslice boundaries
 - considering a certain time, you can get its position within the timeslice boundaries
-- a TimeSlice can be scanned with a time mask 
+- a TimeSlice can be scanned with a mask to go through all its starting minutes, or all its starting hours...
 
+The TimeMask type provides the following scanning possibilities:
+```go
+	MASK_MINUTE    
+	MASK_MINUTEx15 
+	MASK_HALFHOUR 
+	MASK_HOUR      
+	MASK_HOURx4    
+	MASK_HALFDAY   
+	MASK_DAY       
+	MASK_MONTH     
+	MASK_QUARTER   
+	MASK_YEAR      
+```
 
 ## Installing 
 
 ```bash 
 go get -u github.com/sunraylab/timeline@latest
 ```
+
+## Changelog
+
+- v1.1.0 : 
+  - provides the TimeMask type 
+  - fix Scan function
+  - add function String() to Duration
+  - add function Adjust() to Duration
 
 ## Licence
 

@@ -97,6 +97,7 @@ func ExampleTimeSlice_WhatTime() {
 	// take a 10 days timeslice, starting the 2022,1,1 at 8AM
 	ts := MakeTimeslice(time.Date(2022, 1, 1, 8, 0, 0, 0, time.UTC), duration.Day*10)
 	fmt.Println(ts)
+
 	for rate := 0.0; rate <= 1.0; rate += 0.2 {
 		t := ts.WhatTime(rate)
 		fmt.Println(t.Format("20060102 15:04:05 MST"))
@@ -110,4 +111,68 @@ func ExampleTimeSlice_WhatTime() {
 	// 20220107 08:00:00 UTC
 	// 20220109 08:00:00 UTC
 	// 20220111 08:00:00 UTC
+}
+
+func ExampleTimeSlice() {
+
+	// take a 3 days timeslice, starting the 2022,1,6 at 7:30AM
+	ts := MakeTimeslice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), duration.Day*3)
+	fmt.Printf("A timeslice: %s\n", ts)
+
+	// get a scan mask to handle 10 steps max
+	mask := ts.GetScanMask(10)
+	fmt.Printf("scan mask = %s\n", mask.String())
+
+	// scan to build a grid with dates matching the mask inside this time slice, includes boundaries any time
+	var xgridtime time.Time
+	for ts.Scan(&xgridtime, mask, true); !xgridtime.IsZero(); ts.Scan(&xgridtime, mask, true) {
+		progress := ts.Progress(xgridtime)
+		fmt.Printf("%s ==> progress: %3.1f%%\n", xgridtime.Format("20060102 15:04:05"), progress*100)
+	}
+
+	// What is the time at the middle of this timeslice ?
+	middle := ts.WhatTime(0.5)
+	fmt.Printf("the middle of this timeslice is: %v\n", middle)
+
+	// Apply a mask to get the Quarter corresponding to this date
+	quarter, _ := MASK_QUARTER.Apply(middle)
+	fmt.Printf("the corresponding quarter starts: %v\n", quarter)
+
+	// Output:
+	// A timeslice: { 20220106 07:30:00 UTC - 20220109 07:30:00 UTC : 3d }
+	// scan mask = half-day
+	// 20220106 07:30:00 ==> progress: 0.0%
+	// 20220106 12:00:00 ==> progress: 6.2%
+	// 20220107 00:00:00 ==> progress: 22.9%
+	// 20220107 12:00:00 ==> progress: 39.6%
+	// 20220108 00:00:00 ==> progress: 56.2%
+	// 20220108 12:00:00 ==> progress: 72.9%
+	// 20220109 00:00:00 ==> progress: 89.6%
+	// 20220109 07:30:00 ==> progress: 100.0%
+	// the middle of this timeslice is: 2022-01-07 19:30:00 +0000 UTC
+	// the corresponding quarter starts: 2022-01-01 00:00:00 +0000 UTC
+}
+
+func ExampleTimeSlice_GetScanMask() {
+
+	ts := MakeTimeslice(time.Date(2008, 10, 31, 21, 0, 0, 0, time.UTC), duration.Month*3)
+
+	for i := 10; i > 0; i-- {
+		mask := ts.GetScanMask(12)
+		fmt.Printf("best scan mask:%12s <== Timeslice: %s\n", mask.String(), ts)
+
+		ts.ExtendTo(-ts.Duration().Adjust(0.7))
+	}
+
+	// Output:
+	// best scan mask:       month <== Timeslice: { 20081031 21:00:00 UTC - 20090131 04:30:00 UTC : 3M }
+	// best scan mask:       month <== Timeslice: { 20081031 21:00:00 UTC - 20081128 06:27:00 UTC : 27d9h27m }
+	// best scan mask:         day <== Timeslice: { 20081031 21:00:00 UTC - 20081109 02:14:06 UTC : 8d5h14m~ }
+	// best scan mask:    half-day <== Timeslice: { 20081031 21:00:00 UTC - 20081103 08:10:13 UTC : 2d11h10m~ }
+	// best scan mask:     4 hours <== Timeslice: { 20081031 21:00:00 UTC - 20081101 14:45:04 UTC : 17h45m4s }
+	// best scan mask:   half-hour <== Timeslice: { 20081031 21:00:00 UTC - 20081101 02:19:31 UTC : 5h19m31s }
+	// best scan mask:  15 minutes <== Timeslice: { 20081031 21:00:00 UTC - 22:35:51 : 1h35m51s }
+	// best scan mask:  15 minutes <== Timeslice: { 20081031 21:00:00 UTC - 21:28:45 : 28m45s }
+	// best scan mask:      minute <== Timeslice: { 20081031 21:00:00 UTC - 21:08:37 : 8m37s }
+	// best scan mask:      minute <== Timeslice: { 20081031 21:00:00 UTC - 21:02:35 : 2m35s }
 }

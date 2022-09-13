@@ -294,54 +294,104 @@ func (ts TimeSlice) Split(d time.Duration) ([]TimeSlice, error) {
 	return slices, nil
 }
 
+// GetScanMask returns the best appropriate TimeMask for scanning a timeline and to ensure max Scans in a timeslice.
+// The returned mask can be used directly by the scan function.
+//
+// returns MASK_NONE if the timeslice has infinite duration or maxScans = 0
+// returns MASK_SHORTEST if the timselice is a single date
+func (ts TimeSlice) GetScanMask(maxScans uint) (mask TimeMask) {
+	// check duration of ts
+	var d duration.Duration
+	if pdur := ts.Duration(); pdur == nil || maxScans == 0 {
+		return MASK_NONE
+	} else {
+		d = *pdur
+	}
+	// returns MASK_SHORTEST if the timselice is a single date
+	if d == 0 {
+		return MASK_SHORTEST
+	}
+	// calculation on the absolute duration
+	if d < 0 {
+		d = -d
+	}
+
+	//log.Printf("m=%f h=%f d=%f M=%f Y=%f ", time.Duration(d).Minutes(), time.Duration(d).Hours(), d.Days(), d.Months(), d.Years())
+
+	switch {
+	case time.Duration(d).Minutes() <= float64(maxScans):
+		mask = MASK_MINUTE
+	case (time.Duration(d).Hours() * 4) <= float64(maxScans):
+		mask = MASK_MINUTEx15
+	case (time.Duration(d).Hours() * 2) <= float64(maxScans):
+		mask = MASK_HALFHOUR
+	case time.Duration(d).Hours() <= float64(maxScans):
+		mask = MASK_HOUR
+	case (d.Days() * 6) <= float64(maxScans):
+		mask = MASK_HOURx4
+	case (d.Days() * 2) <= float64(maxScans):
+		mask = MASK_HALFDAY
+	case d.Days() <= float64(maxScans):
+		mask = MASK_DAY
+	case d.Months() <= float64(maxScans):
+		mask = MASK_MONTH
+	case d.Quarters() <= float64(maxScans):
+		mask = MASK_QUARTER
+	default:
+		mask = MASK_YEAR
+	}
+	return mask
+}
+
 // Scan returns next time, within the timeslice boundaries, matching mask.
 //
-// Scan always starts by the From date of the timeslice. If the From date is infinite then returns a zero date and the cursor is reset to nil.
+// Scan always starts by the begining of the timeslice. If the begining is infinite then Scan returns a zero date and the cursor is reset to nil.
 //
-// Scan use to cursor and look for the next time matching the mask and returns it. The cursor moves to this time.
-// If the matching time is over the timslice boundary then returns a zero time and reset the cursor.
+// Scan looks for the next time after the cursor matching the mask and returns it. The cursor moves to this returned time.
+// If the matching time is over the timeslice boundary then Scan returns a zero time and reset the cursor.
 //
-// Use fBoundaries if you want the scanner returns the boundaries even if they do not match the mask.
+// Use fBoundaries if you want the scanner to returns the boundary even if they do not match the mask.
 //
-// if the timeslice has an infinite end boundary, then the scan will never returns a nil cursor.
+// If the timeslice has an infinite end boundary, then the scan will never returns a nil cursor.
 //
-// panic if mask <= 0
-func (ts *TimeSlice) Scan(cursor *time.Time, mask time.Duration, fBoundaries bool) time.Time {
-	if mask <= 0 {
+// panic if mask not an allowed value
+func (ts TimeSlice) Scan(cursor *time.Time, mask TimeMask, fBoundaries bool) time.Time {
+	if mask < MASK_min || mask > MASK_max {
 		log.Fatalf("invalid scan mask: %d", mask)
 	}
 	if ts.From.IsZero() {
 		return time.Time{}
 	}
 
-	var newcursor time.Time
+	newcursor := *cursor
+	start := false
 
-	// init the cursor with the first scan
-	first := false
-	if cursor.IsZero() {
-		first = true
+	// init the cursor if we start scanning
+	if newcursor.IsZero() {
+		start = true
 		newcursor = ts.From
-	} else {
-		newcursor = *cursor
 	}
 
 	// calculate the next cursor according to the mask, and the direction
+	var fmatch bool
 	if ts.Direction() == AntiChronological {
-		// returns the begining of the timeslice
-		if first && (fBoundaries || newcursor.Truncate(mask).Equal(ts.From) || newcursor.Truncate(mask).Add(mask).Equal(ts.From)) {
+		// apply the mask to the cursor
+		newcursor, fmatch = mask.Apply(newcursor)
+
+		// for the first scan, returns the begining of the timeslice
+		// if it's matching with the mask, or if boundary requested
+		if start && (fBoundaries || fmatch || mask.Add(newcursor).Equal(ts.From)) {
 			newcursor = ts.From
 			*cursor = newcursor
 			return newcursor
 		}
 
-		// move the cursor before
-		if newcursor.Equal(newcursor.Truncate(mask)) {
-			newcursor = newcursor.Truncate(mask).Add(-mask)
-		} else {
-			newcursor = newcursor.Truncate(mask)
+		// move the cursor one step backward, only if already matching the mask
+		if fmatch {
+			newcursor = mask.Sub(newcursor)
 		}
 
-		// check over end boundaries
+		// check overflow
 		if newcursor.Before(ts.To) {
 			if fBoundaries && !cursor.Equal(ts.To) {
 				newcursor = ts.To
@@ -350,21 +400,27 @@ func (ts *TimeSlice) Scan(cursor *time.Time, mask time.Duration, fBoundaries boo
 			}
 		}
 	} else {
-		// returns the begining of the timeslice
-		if first && (fBoundaries || newcursor.Truncate(mask).Equal(ts.From)) {
+		// apply the mask to the cursor
+		newcursor, fmatch = mask.Apply(newcursor)
+
+		// for the first scan, returns the begining of the timeslice
+		// if it's matching with the mask, or if boundary requested
+		if start && (fBoundaries || fmatch) {
 			newcursor = ts.From
 			*cursor = newcursor
 			return newcursor
 		}
 
-		// move the cursor after
-		newcursor = newcursor.Truncate(mask).Add(mask)
+		// move the cursor one step
+		newcursor = mask.Add(newcursor)
 
-		// check over end boundaries
+		// check end boundary
 		if newcursor.After(ts.To) {
 			if fBoundaries && !cursor.Equal(ts.To) {
+				// returns the end of the timeslice
 				newcursor = ts.To
 			} else {
+				// the scan if finished
 				newcursor = time.Time{}
 			}
 		}
