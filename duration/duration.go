@@ -153,30 +153,7 @@ func (pd *Duration) FormatOrderOfMagnitude(maxorder uint) (str string) {
 	return str + dust
 }
 
-///********************************************
-
-// GetBestStep returns the best time step to accept maxStep in the timeslice
-/*func (ts TimeSlice) GetBestTimeStep(maxSteps uint) TimeStep {
-
-	hrange := ts.Duration().Hours()
-
-	var tstep TimeStep
-	if hrange*60 <= float64(maxSteps) {
-		tstep = TSTEP_MINUTE
-	} else if hrange*4 <= float64(maxSteps) {
-		tstep = TSTEP_15MINUTES
-	} else if hrange <= float64(maxSteps) {
-		tstep = TSTEP_HOUR
-	} else if hrange/24*6 <= float64(maxSteps) {
-		tstep = TSTEP_4HOUR
-	} else if hrange/24 <= float64(maxSteps) {
-		tstep = TSTEP_DAY
-	} else if hrange/24/30 <= float64(maxSteps) {
-		tstep = TSTEP_MONTH
-	} else {
-		tstep = TSTEP_YEAR
-	}
-	return tstep
+// Default formating
+func (d Duration) String() string {
+	return d.FormatOrderOfMagnitude(3)
 }
-
-*/
