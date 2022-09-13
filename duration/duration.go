@@ -34,6 +34,11 @@ const (
 // Duration type extends default time.Duration with additional Days, Month and Year methods, and with a special formating function.
 type Duration time.Duration
 
+// Adjust the duration accordint to the factor
+func (d Duration) Adjust(factor float64) Duration {
+	return Duration(float64(d) * factor)
+}
+
 // Days returns the number of days,
 // assuming one day is 24h
 func (d Duration) Days() float64 {
