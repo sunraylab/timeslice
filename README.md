@@ -86,6 +86,9 @@ go get -u github.com/sunraylab/timeline@latest
   - add function String() to Duration
   - add function Adjust() to Duration
 
+- v1.1.1 : 
+  - add function GetTimeFormat() to TimeMask
+
 ## Licence
 
 [MIT](LICENSE)

@@ -51,6 +51,46 @@ func (mask TimeMask) String() string {
 	return "?"
 }
 
+// GetTimeFormat returns the best appropriate and streamlined string time format, according to the mask.
+// The time format depends also on what time component has changed between newt and formert.
+// https://yourbasic.org/golang/format-parse-string-time-date-example/
+func (mask TimeMask) GetTimeFormat(newt time.Time, formert time.Time) (strfmt string) {
+	fday := false
+	switch mask {
+	case MASK_MINUTE, MASK_MINUTEx15, MASK_HALFHOUR, MASK_HOUR, MASK_HOURx4:
+		strfmt = "15:04"
+	case MASK_HALFDAY:
+		strfmt = "02 15:04"
+		fday = true
+	case MASK_DAY:
+		strfmt = "02"
+		fday = true
+	case MASK_MONTH, MASK_QUARTER:
+		strfmt = "Jan"
+	default:
+		strfmt = "2006"
+	}
+
+	var upfront string
+	if formert.Day() != newt.Day() && mask < MASK_HALFDAY {
+		upfront = "02 "
+		fday = true
+	}
+	if formert.Month() != newt.Month() && mask < MASK_MONTH {
+		upfront = "Jan 02 "
+		fday = true
+	}
+	if formert.Year() != newt.Year() && mask < MASK_YEAR {
+		upfront = "2006 Jan 02 " + strfmt
+		fday = true
+	}
+	strfmt = upfront + strfmt
+	if fday {
+		strfmt = "Mon, " + strfmt
+	}
+	return strfmt
+}
+
 // Apply the mask to a date and returns a masked time and a flag indicating if the given time matches exactly the mask
 //
 // if mask is MASK_NONE then returned an unchanged time.

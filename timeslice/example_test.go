@@ -176,3 +176,41 @@ func ExampleTimeSlice_GetScanMask() {
 	// best scan mask:      minute <== Timeslice: { 20081031 21:00:00 UTC - 21:08:37 : 8m37s }
 	// best scan mask:      minute <== Timeslice: { 20081031 21:00:00 UTC - 21:02:35 : 2m35s }
 }
+
+func ExampleTimeMask_GetTimeFormat() {
+
+	// according to a choosen date
+	t1 := time.Date(2008, 10, 30, 21, 12, 59, 0, time.UTC)
+	fmt.Printf("Choosen time t1=%s\n", t1.Format("2006-01-02 15:04:05"))
+
+	// format this date according to the mask
+	for mask := MASK_min; mask <= MASK_max; mask++ {
+		strfmt := mask.GetTimeFormat(t1, t1)
+		strt := t1.Format(strfmt)
+		fmt.Printf("with mask:%12s, renders: %s\n", mask.String(), strt)
+	}
+
+	// Now renders the same time, with a hour level mask, but comparing with another time
+	// GetTimeFormat decides if another time component needs to be printed to make
+	// the output more comprehensive.
+	// Usefull if you scan times thru a timeline and want to streamline the output
+	t2 := t1.Add(1 * time.Hour * 24 * 31)
+	fmt.Printf("Next time t2=%s\n", t2.Format("2006-01-02 15:04:05"))
+
+	fmt.Printf("Streamlined output for t2 renders: %s\n", t2.Format(MASK_HOUR.GetTimeFormat(t2, t1)))
+
+	// Output:
+	// Choosen time t1=2008-10-30 21:12:59
+	// with mask:      minute, renders: 21:12
+	// with mask:  15 minutes, renders: 21:12
+	// with mask:   half-hour, renders: 21:12
+	// with mask:        hour, renders: 21:12
+	// with mask:     4 hours, renders: 21:12
+	// with mask:    half-day, renders: Thu, 30 21:12
+	// with mask:         day, renders: Thu, 30
+	// with mask:       month, renders: Oct
+	// with mask:     quarter, renders: Oct
+	// with mask:        year, renders: 2008
+	// Next time t2=2008-11-30 21:12:59
+	// Streamlined output for t2 renders: Sun, Nov 30 21:12
+}

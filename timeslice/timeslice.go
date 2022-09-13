@@ -114,29 +114,29 @@ func (pts *TimeSlice) ExtendFrom(dur duration.Duration) {
 //	An infinite begining prints "past" and an infinite end prints "future".
 //	if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
 //	if a boundary does not have any year nor month nor day, then prints only the time.
-func (thists TimeSlice) String() string {
+func (ts TimeSlice) String() string {
 	var strfrom, strto, strdur string
-	if thists.From.IsZero() {
+	if ts.From.IsZero() {
 		strfrom = "past"
 	} else {
-		if thists.From.Hour() == 0 && thists.From.Minute() == 0 && thists.From.Second() == 0 {
-			strfrom = thists.From.Format("20060102 MST")
+		if ts.From.Hour() == 0 && ts.From.Minute() == 0 && ts.From.Second() == 0 {
+			strfrom = ts.From.Format("20060102 MST")
 		} else {
-			strfrom = thists.From.Format("20060102 15:04:05 MST")
+			strfrom = ts.From.Format("20060102 15:04:05 MST")
 		}
 	}
-	if thists.From.IsZero() {
+	if ts.From.IsZero() {
 		strto = "future"
 	} else {
-		if thists.To.Hour() == 0 && thists.To.Minute() == 0 && thists.To.Second() == 0 {
-			strto = thists.To.Format("20060102 MST")
-		} else if thists.From.Year() == thists.To.Year() && thists.From.Month() == thists.To.Month() && thists.From.Day() == thists.To.Day() {
-			strto = thists.To.Format("15:04:05")
+		if ts.To.Hour() == 0 && ts.To.Minute() == 0 && ts.To.Second() == 0 {
+			strto = ts.To.Format("20060102 MST")
+		} else if ts.From.Year() == ts.To.Year() && ts.From.Month() == ts.To.Month() && ts.From.Day() == ts.To.Day() {
+			strto = ts.To.Format("15:04:05")
 		} else {
-			strto = thists.To.Format("20060102 15:04:05 MST")
+			strto = ts.To.Format("20060102 15:04:05 MST")
 		}
 	}
-	strdur = thists.Duration().FormatOrderOfMagnitude(3)
+	strdur = ts.Duration().FormatOrderOfMagnitude(3)
 	return fmt.Sprintf("{ %s - %s : %s }", strfrom, strto, strdur)
 }
 
@@ -177,18 +177,18 @@ func (one TimeSlice) Equal(another TimeSlice) int {
 // Returns the direction of the timeslice.
 //
 //	returns 'Undefined' if both boundaries are infinite or if the timslice is a single date.
-func (thists TimeSlice) Direction() Direction {
-	if thists.From.IsZero() && thists.To.IsZero() {
+func (ts TimeSlice) Direction() Direction {
+	if ts.From.IsZero() && ts.To.IsZero() {
 		return Undefined
 	}
-	if thists.From.IsZero() {
+	if ts.From.IsZero() {
 		return AntiChronological
 	}
-	if thists.To.IsZero() {
+	if ts.To.IsZero() {
 		return Chronological
 	}
 
-	d := int(thists.To.Sub(thists.From))
+	d := int(ts.To.Sub(ts.From))
 	switch {
 	case d < 0:
 		return AntiChronological
