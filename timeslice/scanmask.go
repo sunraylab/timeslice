@@ -81,7 +81,7 @@ func (mask TimeMask) GetTimeFormat(newt time.Time, formert time.Time) (strfmt st
 		fday = true
 	}
 	if formert.Year() != newt.Year() && mask < MASK_YEAR {
-		upfront = "2006 Jan 02 " + strfmt
+		upfront = "2006 Jan 02 "
 		fday = true
 	}
 	strfmt = upfront + strfmt
