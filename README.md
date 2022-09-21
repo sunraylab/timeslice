@@ -2,8 +2,8 @@
 
 Timeline module provides 2 packages
 
-- Duration : which is an extension of the default time.Duration package.
-- TimeSlice : TimeSlice represents a range of times bounded by two dates (time.Time) From and To. It accepts infinite boundaries (zero times) and can be chronological or anti-chronological.
+- [Duration](https://pkg.go.dev/github.com/sunraylab/timeline/duration) : which is an extension of the default time.Duration package.
+- [TimeSlice](https://pkg.go.dev/github.com/sunraylab/timeline/timeslice) : TimeSlice represents a range of times bounded by two dates (time.Time) From and To. It accepts infinite boundaries (zero times) and can be chronological or anti-chronological.
 
 ## Usage
 
@@ -24,15 +24,17 @@ Duration provides also a special formating function `FormatOrderOfMagnitude` to 
 - starting with the biggest time components available, only the following choosen number of components are output
 - all trailing non zero components produce the `~` output meaning the duration in not exact
 
-For example 
+Example 
+
 ```go 
-	// more than one month
-	d7 := Duration(1*Month + 4*Day + 2*time.Hour + 35*time.Minute + 25*time.Second)
-    // Format with Order Of Magnitude of 3
-    // here the output starts with Months (because there is no years)
-    // so an order of magnitude of 3 gives 3 time components from Months: Month, Days, and Hours.
-    // considering lower orders not significant, or dust
-	fmt.Printf("%s\n", d7.FormatOrderOfMagnitude(3)) // prints: 1M4d2h~
+// more than one month
+d7 := Duration(1*Month + 4*Day + 2*time.Hour + 35*time.Minute + 25*time.Second)
+
+// Format with Order Of Magnitude of 3
+// here the output starts with Months (because there is no years)
+// so an order of magnitude of 3 gives 3 time components from Months: Month, Days, and Hours.
+// considering lower orders not significant, or dust
+fmt.Printf("%s\n", d7.FormatOrderOfMagnitude(3)) // prints: 1M4d2h~
 ```
 
 ## Timeslice
@@ -42,21 +44,22 @@ A timeSlice can be easily created with literal values:
 ```go
 ts := &TimeSlice{
          From: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
-         To:   time.Date(2022, 1, 2, 0, 0, 0, 0, time.UTC),
+         To:   time.Date(2022, 1, 2, 0, 0, 0, 0, time.UTC),}
 ```
 
 A TimeSlice can also be created with a factory function with a defined d duration and a starting time.
+
 ```go
 ts := BuildTimeSlice(time.Now(), 1 * Day)
 ```
 
 TimeSlice provides basic functions to proceed with infinite boundaries (zero times) and with chronological or anti-chronological direction.
 
-In addition a TimeSlice provides advanced features: 
-- a TimeSlice can be splitted in sub timelices of a specified duration
-- you can get the exact time at a selected progress rate within the timeslice boundaries
-- considering a certain time, you can get its position within the timeslice boundaries
-- a TimeSlice can be scanned with a mask to go through all its starting minutes, or all its starting hours...
+TimeSlice advanced features: 
+- TimeSlice can be splitted in sub timelices of a specified duration
+- get the exact time at a selected progress rate within the timeslice boundaries
+- considering a certain time, get its position within the timeslice boundaries
+- TimeSlice can be scanned with a mask to go through all its starting minutes, all its starting hours...
 
 The TimeMask type provides the following scanning possibilities:
 ```go
@@ -91,6 +94,10 @@ go get -u github.com/sunraylab/timeline@latest
 
 - v1.2.1 : 
   - fix scanmask
+
+- v1.3.0 : 
+  - go 1.19.1
+  - updating the doc and adding copyright info
 
 
 ## Licence

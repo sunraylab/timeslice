@@ -1,3 +1,6 @@
+// Copyright 2022 by lolorenzo77. All rights reserved.
+// Use of this source code is governed by MIT licence that can be found in the LICENSE file.
+
 /*
 timselice package provides a TimeSlice stuct with its methods.
 
@@ -33,10 +36,9 @@ type TimeSlice struct {
 }
 
 // MakeTimeslice creates and returns a new timeslice with a defined d duration and a starting time.
-//
-//	If d == zero then the timeslice represents a single time.
-//	If d > 0 then the given times represents the begining
-//	If d < 0 then the given times represents the end
+//   - If d == zero then the timeslice represents a single time.
+//   - If d > 0 then the given times represents the begining
+//   - If d < 0 then the given times represents the end
 //
 // panic if the given date is not defined (zero time)
 func MakeTimeslice(dte time.Time, d time.Duration) TimeSlice {
@@ -86,9 +88,8 @@ func (pts *TimeSlice) MoveTo(request time.Time, cap bool) {
 }
 
 // ExtendTo add the duration at the end of the timeslice.
-//
-//	If the duration is negative then the end time moves backward.
-//	If *pts.To is infinite, then To stays infinite
+//   - If the duration is negative then the end time moves backward.
+//   - If *pts.To is infinite, then To stays infinite
 //
 // The timeslice direction can change.
 func (pts *TimeSlice) ExtendTo(dur duration.Duration) {
@@ -98,9 +99,8 @@ func (pts *TimeSlice) ExtendTo(dur duration.Duration) {
 }
 
 // ExtendTo add the duration at the begining of the timeslice.
-//
-//	If the duration is negative then the begining time moves backward.
-//	If *pts.From is infinite, then From stays infinite
+//   - If the duration is negative then the begining time moves backward.
+//   - If *pts.From is infinite, then From stays infinite
 //
 // The timeslice direction can change
 func (pts *TimeSlice) ExtendFrom(dur duration.Duration) {
@@ -111,9 +111,9 @@ func (pts *TimeSlice) ExtendFrom(dur duration.Duration) {
 
 // String returns default formating: "{ from - to : duration }".
 //
-//	An infinite begining prints "past" and an infinite end prints "future".
-//	if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
-//	if a boundary does not have any year nor month nor day, then prints only the time.
+// An infinite begining prints "past" and an infinite end prints "future".
+//   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
+//   - if a boundary does not have any year nor month nor day, then prints only the time.
 func (ts TimeSlice) String() string {
 	var strfrom, strto, strdur string
 	if ts.From.IsZero() {
@@ -141,9 +141,8 @@ func (ts TimeSlice) String() string {
 }
 
 // Duration returns the timeslice duration.
-//
-//	returns nil if one boundary is an infifinte time.
-//	returns zero if timeslice boundaries have the exact same times.
+//   - returns nil if one boundary is an infifinte time.
+//   - returns zero if timeslice boundaries have the exact same times.
 func (ts TimeSlice) Duration() *duration.Duration {
 	if ts.From.IsZero() || ts.To.IsZero() {
 		return nil
@@ -161,10 +160,9 @@ func (ts TimeSlice) Truncate(dur time.Duration) TimeSlice {
 }
 
 // Equal checks if 2 timeslices start and end at the same times, event if they're in a different timezone.
-//
-//	returns 1 if equal and in the same direction.
-//	returns 0 if not equal.
-//	returns -1 if equal but in the opposite direction.
+//   - returns 1 if equal and in the same direction.
+//   - returns 0 if not equal.
+//   - returns -1 if equal but in the opposite direction.
 func (one TimeSlice) Equal(another TimeSlice) int {
 	if one.From.Equal(another.From) && one.To.Equal(another.To) {
 		return 1
@@ -176,7 +174,7 @@ func (one TimeSlice) Equal(another TimeSlice) int {
 
 // Returns the direction of the timeslice.
 //
-//	returns 'Undefined' if both boundaries are infinite or if the timslice is a single date.
+// returns 'Undefined' if both boundaries are infinite or if the timslice is a single date.
 func (ts TimeSlice) Direction() Direction {
 	if ts.From.IsZero() && ts.To.IsZero() {
 		return Undefined
@@ -203,13 +201,15 @@ func (ts TimeSlice) Direction() Direction {
 //
 // The progress is calculated from the begining of the timeslice, whatever its direction. The returned rate is always positive.
 //
-//	returns 0.5 if the timeslice has no duration
-//	for a chronological timeslice:
-//		- returns 0 if datetime is before the begining
-//		- returns 1 if datetime is after the end
-//	for an anti-chronological timeslice:
-//		- returns 0 if datetime is after the begining
-//		- returns 1 if datetime is before the end
+// returns 0.5 if the timeslice has no duration.
+//
+// for a chronological timeslice:
+//   - returns 0 if datetime is before the begining
+//   - returns 1 if datetime is after the end
+//
+// for an anti-chronological timeslice:
+//   - returns 0 if datetime is after the begining
+//   - returns 1 if datetime is before the end
 func (ts TimeSlice) Progress(datetime time.Time) (rate float64) {
 	pdur := ts.Duration()
 	if pdur == nil {
@@ -234,8 +234,8 @@ func (ts TimeSlice) Progress(datetime time.Time) (rate float64) {
 //
 // The progress is calculated from the begining of the timeslice, whatever its direction. The returned date is always within the time slice
 //
-//	returns a zero time if the timeslice has an infinite duration.
-//	if the timeslice is a single date then returns it.
+// returns a zero time if the timeslice has an infinite duration.
+// If the timeslice is a single date then returns it.
 func (ts TimeSlice) WhatTime(rate float64) time.Time {
 	pdur := ts.Duration()
 	if pdur == nil {
@@ -296,9 +296,8 @@ func (ts TimeSlice) Split(d time.Duration) ([]TimeSlice, error) {
 
 // GetScanMask returns the best appropriate TimeMask for scanning a timeline and to ensure max Scans in a timeslice.
 // The returned mask can be used directly by the scan function.
-//
-// returns MASK_NONE if the timeslice has infinite duration or maxScans = 0
-// returns MASK_SHORTEST if the timselice is a single date
+//   - returns MASK_NONE if the timeslice has infinite duration or maxScans = 0
+//   - returns MASK_SHORTEST if the timselice is a single date
 func (ts TimeSlice) GetScanMask(maxScans uint) (mask TimeMask) {
 	// check duration of ts
 	var d duration.Duration

@@ -1,3 +1,6 @@
+// Copyright 2022 by lolorenzo77. All rights reserved.
+// Use of this source code is governed by MIT licence that can be found in the LICENSE file.
+
 /*
 duration package provides an extension of the default time.Duration.
 
@@ -78,10 +81,10 @@ func (d Duration) Years() float64 {
 //
 // The output will be in the following format:
 //
-//	'[-][100Y][12M][31d][24h][60m][99s][~]' with:
-//	- only non-zero components are output
-//	- starting with the biggest time components available, only the following choosen number of components are output
-//	- all trailing non zero components produce the `~` output meaning the duration in not exact
+//	 '[-][100Y][12M][31d][24h][60m][99s][~]' with:
+//		- only non-zero components are output
+//		- starting with the biggest time components available, only the following choosen number of components are output
+//		- all trailing non zero components produce the `~` output meaning the duration in not exact
 //
 // maxorder is bounded between 1 and 6.
 //
