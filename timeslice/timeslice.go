@@ -49,6 +49,20 @@ func MakeTimeslice(dte time.Time, d time.Duration) TimeSlice {
 	return *ts
 }
 
+// Middle returns the time at the middle of the timeslice.
+//
+// Return a zero time if the timeslice has infinite boundaries
+func (ts TimeSlice) Middle() time.Time {
+	d := ts.Duration()
+	if d == nil {
+		return time.Time{}
+	}
+	if *d == 0 {
+		return ts.From
+	}
+	return ts.From.Add(time.Duration(*d / 2.0))
+}
+
 // Moves the begining of the timeslice to the requested time.
 // Postpone the end time if the request time exceeds it, or
 // cap the date to the end of the timeslice, according to the direction.
