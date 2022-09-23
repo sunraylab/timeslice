@@ -1,19 +1,17 @@
 // Copyright 2022 by lolorenzo77. All rights reserved.
 // Use of this source code is governed by MIT licence that can be found in the LICENSE file.
 
-package timeslice
+package timeline
 
 import (
 	"testing"
 	"time"
-
-	"github.com/sunraylab/timeline/duration"
 )
 
 func TestSplit(t *testing.T) {
 
 	// a timeslice staring 20220801 0h00:00 and 7 days long
-	ts := MakeTimeslice(time.Date(2022, 8, 1, 0, 0, 0, 0, time.UTC), 7*duration.Day)
+	ts := MakeTimeslice(time.Date(2022, 8, 1, 0, 0, 0, 0, time.UTC), 7*Day)
 
 	// split in one
 	tss0, err := ts.Split(7 * 24 * time.Hour)

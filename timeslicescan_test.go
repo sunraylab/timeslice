@@ -1,14 +1,12 @@
 // Copyright 2022 by lolorenzo77. All rights reserved.
 // Use of this source code is governed by MIT licence that can be found in the LICENSE file.
 
-package timeslice
+package timeline
 
 import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/sunraylab/timeline/duration"
 )
 
 func TestScanSingle(t *testing.T) {
@@ -91,7 +89,7 @@ func TestScanChrono2(t *testing.T) {
 	var get string
 	var cursor time.Time
 
-	ts := MakeTimeslice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), duration.Month*3)
+	ts := MakeTimeslice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), Month*3)
 	mask := MASK_MONTH
 
 	// get matching boundaries...

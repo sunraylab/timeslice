@@ -1,7 +1,7 @@
 // Copyright 2022 by lolorenzo77. All rights reserved.
 // Use of this source code is governed by MIT licence that can be found in the LICENSE file.
 
-package duration
+package timeline
 
 import (
 	"fmt"

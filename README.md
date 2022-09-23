@@ -1,9 +1,10 @@
-# Timeline module in go
+# timeline package in go
 
-Timeline module provides 2 packages
+timeline package provides 3 main types:
 
-- [Duration](https://pkg.go.dev/github.com/sunraylab/timeline/duration) : which is an extension of the default time.Duration package.
-- [TimeSlice](https://pkg.go.dev/github.com/sunraylab/timeline/timeslice) : TimeSlice represents a range of times bounded by two dates (time.Time) From and To. It accepts infinite boundaries (zero times) and can be chronological or anti-chronological.
+- Duration: which is an extension of the default time.Duration struct.
+- TimeSlice: representing a range of times bounded by two dates (time.Time) From and To. It accepts infinite boundaries (zero times) and can be chronological or anti-chronological.
+- TimeMask: used for scanning a TimeSlice and to get the time corresponding to a rounding o'clock period.
 
 ## Usage
 
@@ -11,7 +12,7 @@ Timeline module provides 2 packages
 
 `Duration` type extends default `time.Duration` with additional Days, Month and Year methods, and with a special formating function.
 
-`Days`, ``Month`` and ``Year`` methods provides usefull calculations based on the following typical time values:
+`Days`, `Month` and `Year` methods provides usefull calculations based on the following typical time values:
 
 	1 day       = 24 hours
 	1 year      = 365.25 days in average because of leap years = 8766 hours
@@ -37,9 +38,9 @@ d7 := Duration(1*Month + 4*Day + 2*time.Hour + 35*time.Minute + 25*time.Second)
 fmt.Printf("%s\n", d7.FormatOrderOfMagnitude(3)) // prints: 1M4d2h~
 ```
 
-## Timeslice
+## TimeSlice
 
-A timeSlice can be easily created with literal values:
+A TimeSlice can be easily created with literal values:
 
 ```go
 ts := &TimeSlice{
@@ -50,7 +51,7 @@ ts := &TimeSlice{
 A TimeSlice can also be created with a factory function with a defined d duration and a starting time.
 
 ```go
-ts := BuildTimeSlice(time.Now(), 1 * Day)
+ts := MakeTimeSlice(time.Now(), 1 * Day)
 ```
 
 TimeSlice provides basic functions to proceed with infinite boundaries (zero times) and with chronological or anti-chronological direction.
@@ -60,6 +61,8 @@ TimeSlice advanced features:
 - get the exact time at a selected progress rate within the timeslice boundaries
 - considering a certain time, get its position within the timeslice boundaries
 - TimeSlice can be scanned with a mask to go through all its starting minutes, all its starting hours...
+
+## TimeMask 
 
 The TimeMask type provides the following scanning possibilities:
 ```go
@@ -83,22 +86,26 @@ go get -u github.com/sunraylab/timeline@latest
 
 ## Changelog
 
-- v1.1.0 : 
-  - provides the TimeMask type 
-  - fix Scan function
-  - add function String() to Duration
-  - add function Adjust() to Duration
-
-- v1.2.0 : 
-  - add function GetTimeFormat() to TimeMask
-
-- v1.2.1 : 
-  - fix scanmask
+- v2.0.0 :
+  - the module has been streamlined with its differents packages merged into the timeline package
+  - func Shift() has been added to the TimeSlice
+  - func MoveTo, MoveFrom, ExtendTo, ExtendFrom have been renamed in ToMove, FromMove, ToExtend, FromExtend to be less confusing
 
 - v1.3.0 : 
   - go 1.19.1
   - updating the doc and adding copyright info
 
+- v1.2.1 : 
+  - fix scanmask
+
+- v1.2.0 : 
+  - add function GetTimeFormat() to TimeMask
+
+- v1.1.0 : 
+  - provides the TimeMask type 
+  - fix Scan function
+  - add function String() to Duration
+  - add function Adjust() to Duration
 
 ## Licence
 
