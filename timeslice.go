@@ -28,13 +28,13 @@ type TimeSlice struct {
 	To   time.Time
 }
 
-// MakeTimeslice creates and returns a new timeslice with a defined d duration and a starting time.
+// MakeTimeSlice creates and returns a new timeslice with a defined d duration and a starting time.
 //   - If d == zero then the timeslice represents a single time.
 //   - If d > 0 then the given times represents the begining
 //   - If d < 0 then the given times represents the end
 //
 // panic if the given date is not defined (zero time)
-func MakeTimeslice(dte time.Time, d time.Duration) TimeSlice {
+func MakeTimeSlice(dte time.Time, d time.Duration) TimeSlice {
 	if dte.IsZero() {
 		panic(dte)
 	}
@@ -177,17 +177,25 @@ func (ts TimeSlice) Truncate(dur time.Duration) TimeSlice {
 	return ts
 }
 
-// Equal checks if 2 timeslices start and end at the same times, event if they're in a different timezone.
-//   - returns 1 if equal and in the same direction.
-//   - returns 0 if not equal.
-//   - returns -1 if equal but in the opposite direction.
-func (one TimeSlice) Equal(another TimeSlice) int {
+type Compare uint8
+
+const (
+	DIFFERENT Compare = 0b00000000
+	EQUAL     Compare = 0b00000001
+	OPPOSITE  Compare = 0b00000010
+)
+
+// Compare checks if 2 timeslices start and end at the same times, event if they're in a different timezone.
+//   - returns EQUAL if equal and in the same direction.
+//   - returns DIFFERENT if not equal.
+//   - returns OPPOSITE if equal but in the opposite direction.
+func (one TimeSlice) Compare(another TimeSlice) Compare {
 	if one.From.Equal(another.From) && one.To.Equal(another.To) {
-		return 1
+		return EQUAL
 	} else if one.From.Equal(another.To) && one.To.Equal(another.From) {
-		return -1
+		return OPPOSITE
 	}
-	return 0
+	return DIFFERENT
 }
 
 // Returns the direction of the timeslice.
@@ -298,7 +306,7 @@ func (ts TimeSlice) Split(d time.Duration) ([]TimeSlice, error) {
 
 	slices := make([]TimeSlice, 0)
 	for {
-		split := MakeTimeslice(ts.From, d)
+		split := MakeTimeSlice(ts.From, d)
 		if *pdur > 0 && split.To.After(ts.To) || *pdur < 0 && split.To.Before(ts.To) {
 			split.To = ts.To
 			if *split.Duration() != 0 {

@@ -13,7 +13,7 @@ func TestScanSingle(t *testing.T) {
 	var get string
 	var cursor time.Time
 
-	ts := MakeTimeslice(time.Date(2020, 1, 1, 8, 0, 0, 0, time.UTC), 2*time.Hour)
+	ts := MakeTimeSlice(time.Date(2020, 1, 1, 8, 0, 0, 0, time.UTC), 2*time.Hour)
 	mask := MASK_DAY
 
 	// get... nothing
@@ -36,7 +36,7 @@ func TestScanSingle(t *testing.T) {
 
 	// get... the single date
 	get = ""
-	ts = MakeTimeslice(time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC), 2*time.Hour)
+	ts = MakeTimeSlice(time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC), 2*time.Hour)
 	for ts.Scan(&cursor, mask, false); !cursor.IsZero(); ts.Scan(&cursor, mask, false) {
 		get += cursor.String()
 	}
@@ -49,7 +49,7 @@ func TestScanChrono1(t *testing.T) {
 	var get string
 	var cursor time.Time
 
-	ts := MakeTimeslice(time.Date(2020, 1, 1, 8, 0, 0, 0, time.UTC), 2*time.Hour)
+	ts := MakeTimeSlice(time.Date(2020, 1, 1, 8, 0, 0, 0, time.UTC), 2*time.Hour)
 	mask := MASK_HOUR
 
 	// get matching boundaries...
@@ -89,7 +89,7 @@ func TestScanChrono2(t *testing.T) {
 	var get string
 	var cursor time.Time
 
-	ts := MakeTimeslice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), Month*3)
+	ts := MakeTimeSlice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), Month*3)
 	mask := MASK_MONTH
 
 	// get matching boundaries...
@@ -105,7 +105,7 @@ func TestScanAntiChrono(t *testing.T) {
 	var get string
 	var cursor time.Time
 
-	ts := MakeTimeslice(time.Date(2020, 1, 31, 8, 0, 0, 0, time.UTC), -2*time.Hour)
+	ts := MakeTimeSlice(time.Date(2020, 1, 31, 8, 0, 0, 0, time.UTC), -2*time.Hour)
 	mask := MASK_HOUR
 
 	// get matching boundaries...

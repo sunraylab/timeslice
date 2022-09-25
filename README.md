@@ -86,22 +86,25 @@ go get -u github.com/sunraylab/timeline@latest
 
 ## Changelog
 
-- v2.0.0 :
+- v2.1.0:
+  - Equal is replaced by Compare and returns a type, no more an int. + some refactoring
+
+- v2.0.0:
   - the module has been streamlined with its differents packages merged into the timeline package
   - func Shift() has been added to the TimeSlice
   - func MoveTo, MoveFrom, ExtendTo, ExtendFrom have been renamed in ToMove, FromMove, ToExtend, FromExtend to be less confusing
 
-- v1.3.0 : 
+- v1.3.0: 
   - go 1.19.1
   - updating the doc and adding copyright info
 
-- v1.2.1 : 
+- v1.2.1: 
   - fix scanmask
 
-- v1.2.0 : 
+- v1.2.0: 
   - add function GetTimeFormat() to TimeMask
 
-- v1.1.0 : 
+- v1.1.0: 
   - provides the TimeMask type 
   - fix Scan function
   - add function String() to Duration

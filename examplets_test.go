@@ -11,7 +11,7 @@ import (
 func ExampleTimeSlice_FromMove_one() {
 	// take a date and build a timeslice staring at this date and ending 7 days after
 	from := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
-	ts := MakeTimeslice(from, Week)
+	ts := MakeTimeSlice(from, Week)
 	fmt.Println(ts)
 
 	// Move forward the begining by 4 days
@@ -31,7 +31,7 @@ func ExampleTimeSlice_FromMove_one() {
 func ExampleTimeSlice_ToMove_one() {
 	// take a date and build a timeslice staring at this date and ending 7 days after
 	from := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
-	ts := MakeTimeslice(from, Week)
+	ts := MakeTimeSlice(from, Week)
 	fmt.Println(ts)
 
 	// Move backward the ending by 4 days
@@ -51,7 +51,7 @@ func ExampleTimeSlice_ToMove_one() {
 func ExampleTimeSlice_FromMove_two() {
 	// take a date and build a timeslice staring at this date and ending 7 days after
 	from := time.Date(2022, 1, 6, 8, 0, 0, 0, time.UTC)
-	ts := MakeTimeslice(from, Day)
+	ts := MakeTimeSlice(from, Day)
 	fmt.Println(ts)
 	ts.FromMove(time.Date(2022, 1, 6, 9, 0, 0, 0, time.UTC), true)
 	fmt.Println(ts)
@@ -66,7 +66,7 @@ func ExampleTimeSlice_FromMove_two() {
 func ExampleTimeSlice_ToMove_two() {
 	// take a date and build a timeslice staring at this date and ending 7 days after
 	from := time.Date(2022, 1, 6, 8, 0, 0, 0, time.UTC)
-	ts := MakeTimeslice(from, Day)
+	ts := MakeTimeSlice(from, Day)
 	fmt.Println(ts)
 	ts.ToMove(time.Date(2022, 1, 6, 9, 0, 0, 0, time.UTC), true)
 	fmt.Println(ts)
@@ -79,14 +79,14 @@ func ExampleTimeSlice_ToMove_two() {
 }
 
 func ExampleTimeSlice_String() {
-	ts := MakeTimeslice(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC), Week+time.Hour*31)
+	ts := MakeTimeSlice(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC), Week+time.Hour*31)
 	fmt.Println(ts)
 	// Output: { 20220101 UTC - 20220109 07:00:00 UTC : 8d7h }
 }
 
 func ExampleTimeSlice_Progress() {
 	// take a 24 hours timeslice, starting the 2022,1,1 at midnight
-	ts := MakeTimeslice(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC), Day)
+	ts := MakeTimeSlice(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC), Day)
 
 	// get the corresponding progress date the same day at 6 AM
 	rate := ts.Progress(time.Date(2022, 1, 1, 6, 0, 0, 0, time.UTC))
@@ -96,7 +96,7 @@ func ExampleTimeSlice_Progress() {
 
 func ExampleTimeSlice_WhatTime() {
 	// take a 10 days timeslice, starting the 2022,1,1 at 8AM
-	ts := MakeTimeslice(time.Date(2022, 1, 1, 8, 0, 0, 0, time.UTC), Day*10)
+	ts := MakeTimeSlice(time.Date(2022, 1, 1, 8, 0, 0, 0, time.UTC), Day*10)
 	fmt.Println(ts)
 
 	for rate := 0.0; rate <= 1.0; rate += 0.2 {
@@ -117,7 +117,7 @@ func ExampleTimeSlice_WhatTime() {
 func ExampleTimeSlice() {
 
 	// take a 3 days timeslice, starting the 2022,1,6 at 7:30AM
-	ts := MakeTimeslice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), Day*3)
+	ts := MakeTimeSlice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), Day*3)
 	fmt.Printf("A timeslice: %s\n", ts)
 
 	// get a scan mask to handle 10 steps max
@@ -156,7 +156,7 @@ func ExampleTimeSlice() {
 
 func ExampleTimeSlice_GetScanMask() {
 
-	ts := MakeTimeslice(time.Date(2008, 10, 31, 21, 0, 0, 0, time.UTC), Month*3)
+	ts := MakeTimeSlice(time.Date(2008, 10, 31, 21, 0, 0, 0, time.UTC), Month*3)
 
 	for i := 10; i > 0; i-- {
 		mask := ts.GetScanMask(12)
