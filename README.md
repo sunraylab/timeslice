@@ -6,6 +6,8 @@ timeline package provides 3 main types:
 - TimeSlice: representing a range of times bounded by two dates (time.Time) From and To. It accepts infinite boundaries (zero times) and can be chronological or anti-chronological.
 - TimeMask: used for scanning a TimeSlice and to get the time corresponding to a rounding o'clock period.
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/sunraylab/timeline/v2.svg)](https://pkg.go.dev/github.com/sunraylab/timeline/v2)
+
 ## Usage
 
 ### Duration 
