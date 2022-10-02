@@ -144,6 +144,9 @@ func (pd *Duration) FormatOrderOfMagnitude(maxorder uint) (str string) {
 }
 
 // Default formating
-func (d Duration) String() string {
-	return d.FormatOrderOfMagnitude(3)
+func (pd *Duration) String() string {
+	if pd == nil {
+		return "nil"
+	}
+	return pd.FormatOrderOfMagnitude(3)
 }
