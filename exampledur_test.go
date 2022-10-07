@@ -9,9 +9,9 @@ import (
 )
 
 func ExampleDuration_Days() {
-	d0 := NewDuration(1 * int64(time.Hour))
-	d1 := NewDuration(24 * int64(time.Hour))
-	d2 := NewDuration(25 * int64(time.Hour))
+	d0 := NewDuration(1 * time.Hour)
+	d1 := NewDuration(24 * time.Hour)
+	d2 := NewDuration(25 * time.Hour)
 	fmt.Printf("%f\n%f\n%f", d0.Days(), d1.Days(), d2.Days())
 	// Output:
 	// 0.041667
@@ -21,11 +21,11 @@ func ExampleDuration_Days() {
 
 func ExampleDuration_Months() {
 	// a single day is a fraction of a month
-	d0 := NewDuration(24 * int64(time.Hour))
+	d0 := NewDuration(24 * time.Hour)
 	// 1 average month is 30.4375 days = 730.5 hours
-	n1 := NewDuration(int64(730.5 * float64(time.Hour)))
+	n1 := Nanoseconds(730.5 * float64(time.Hour))
 	// 1 average year is 365.25 days = 8766 hours
-	n2 := NewDuration(8766 * int64(time.Hour))
+	n2 := NewDuration(8766 * time.Hour)
 	fmt.Printf("%f\n%f\n%f\n", d0.Months(), n1.Months(), n2.Months())
 	// Output:
 	// 0.032854
@@ -35,9 +35,9 @@ func ExampleDuration_Months() {
 
 func ExampleDuration_Years() {
 	// half year (1 average month is 30.4375 days)
-	n1 := NewDuration(int64(6 * 30.4375 * 24 * float64(time.Hour)))
+	n1 := Nanoseconds(6 * 30.4375 * 24 * float64(time.Hour))
 	// one full year
-	n2 := NewDuration(int64(365.25 * 24 * float64(time.Hour)))
+	n2 := Nanoseconds(365.25 * 24 * float64(time.Hour))
 	fmt.Printf("%f\n%f\n", n1.Years(), n2.Years())
 	// Output:
 	// 0.500000
@@ -50,24 +50,24 @@ func ExampleDuration_FormatOrderOfMagnitude() {
 	var d Duration
 	fmt.Printf("%s\n", d.FormatOrderOfMagnitude(3))
 	// not significant
-	d1 := NewDuration(1 * int64(time.Millisecond))
+	d1 := NewDuration(1 * time.Millisecond)
 	fmt.Printf("%s\n", d1.FormatOrderOfMagnitude(3))
 	// some seconds
-	d2 := NewDuration(int64(10*time.Second + 75*time.Millisecond))
+	d2 := NewDuration(10*time.Second + 75*time.Millisecond)
 	fmt.Printf("%s\n", d2.FormatOrderOfMagnitude(3))
 	// some minutes without seconds
-	d3 := NewDuration(15 * int64(time.Minute))
+	d3 := NewDuration(15 * time.Minute)
 	fmt.Printf("%s\n", d3.FormatOrderOfMagnitude(3))
 	// on day with some minutes but no hours
-	d4 := NewDuration(int64(Day + 25*time.Minute))
+	d4 := NewDuration(Day + 25*time.Minute)
 	fmt.Printf("%s\n", d4.FormatOrderOfMagnitude(3))
 	// the same but with an order of magnitude of 2
 	fmt.Printf("%s\n", d4.FormatOrderOfMagnitude(2))
 	// one month
-	d6 := NewDuration(1 * int64(Month))
+	d6 := NewDuration(1 * Month)
 	fmt.Printf("%s\n", d6.FormatOrderOfMagnitude(3))
 	// more than one month, leaving dust of minutes & seconds
-	d7 := NewDuration(int64(1*Month + 4*Day + 2*time.Hour + 35*time.Minute + 25*time.Second))
+	d7 := NewDuration(1*Month + 4*Day + 2*time.Hour + 35*time.Minute + 25*time.Second)
 	fmt.Printf("%s\n", d7.FormatOrderOfMagnitude(3))
 
 	// Output:

@@ -25,10 +25,29 @@ type Duration struct {
 }
 
 // NewDuration factory to build a new Duration with an initial timeduration
-func NewDuration(timeduration int64) Duration {
+func NewDuration(timeduration time.Duration) Duration {
 	d := &Duration{Duration: time.Duration(timeduration)}
 	d.IsFinite = true
 	return *d
+}
+
+// DurationFromTo factory to build a new Duration with two dates
+// If one of both dates is not finite, the returned duration is infinite
+func DurationFromTo(from time.Time, to time.Time) Duration {
+	var d Duration
+	if !to.IsZero() && !from.IsZero() {
+		d.Duration = to.Sub(from)
+		d.IsFinite = true
+	}
+	return d
+}
+
+// Nanoseconds factory to build a new Duration converting a float64 into time.Duration
+func Nanoseconds(nanoseconds float64) Duration {
+	var d Duration
+	d.Duration = time.Duration(int64(nanoseconds))
+	d.IsFinite = true
+	return d
 }
 
 // Adjust the duration accordint to the factor
@@ -172,9 +191,6 @@ func (leftd Duration) FormatOrderOfMagnitude(maxorder uint) (str string) {
 }
 
 // Default formating
-func (pd *Duration) String() string {
-	if pd == nil {
-		return "nil"
-	}
-	return pd.FormatOrderOfMagnitude(3)
+func (d Duration) String() string {
+	return d.FormatOrderOfMagnitude(3)
 }

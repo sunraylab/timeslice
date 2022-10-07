@@ -10,7 +10,7 @@ import (
 
 func TestDuration1(t *testing.T) {
 
-	durD := NewDuration(1.0 * int64(Month))
+	durD := NewDuration(1 * Month)
 	m := durD.Minutes()
 	h := durD.Hours()
 	d := durD.Days()

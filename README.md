@@ -88,7 +88,7 @@ go get -u github.com/sunraylab/timeline@latest
 
 ## Changelog
 
-- v2.2.0:
+- v2.2.1:
   - break with the v2.1, major change with Duration which is now embeding time.Duration rather than to be of his type. Add feat. Infinite durations.
   add feat. timeslice.IsZero
 
