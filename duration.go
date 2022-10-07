@@ -5,6 +5,7 @@ package timeline
 
 import (
 	"fmt"
+	"math"
 	"time"
 )
 
@@ -17,41 +18,69 @@ const (
 )
 
 // Duration type extends default time.Duration with additional Days, Month and Year methods, and with a special formating function.
-type Duration time.Duration
+// Handles Infinite duration.
+type Duration struct {
+	time.Duration
+	IsFinite bool // by default the Duration is Infinite
+}
+
+// NewDuration factory to build a new Duration with an initial timeduration
+func NewDuration(timeduration int64) Duration {
+	d := &Duration{Duration: time.Duration(timeduration)}
+	d.IsFinite = true
+	return *d
+}
 
 // Adjust the duration accordint to the factor
 func (d Duration) Adjust(factor float64) Duration {
-	return Duration(float64(d) * factor)
+	newdur := &Duration{}
+	newdur.Duration = time.Duration(float64(d.Duration) * factor)
+	return *newdur
 }
 
 // Days returns the number of days,
 // assuming one day is 24h
 func (d Duration) Days() float64 {
-	return float64(d) / float64(Day)
+	if !d.IsFinite {
+		return math.Inf(0)
+	}
+	return float64(d.Duration) / float64(Day)
 }
 
 // Days returns the number of weeks,
 // assuming one week is 7 days
 func (d Duration) Weeks() float64 {
-	return float64(d) / float64(Week)
+	if !d.IsFinite {
+		return math.Inf(0)
+	}
+	return float64(d.Duration) / float64(Week)
 }
 
 // Months returns the average number of months,
 // assuming an average Month is a Year by 12
 func (d Duration) Months() float64 {
-	return float64(d) / float64(Month)
+	if !d.IsFinite {
+		return math.Inf(0)
+	}
+	return float64(d.Duration) / float64(Month)
 }
 
 // Months returns the average number of months,
 // assuming an average Month is a Year by 12
 func (d Duration) Quarters() float64 {
-	return float64(d) / float64(Quarter)
+	if !d.IsFinite {
+		return math.Inf(0)
+	}
+	return float64(d.Duration) / float64(Quarter)
 }
 
 // Years returns the average number of years,
 // assuming an average year is 365.25 days, so 730.5 hours, because of leap years
 func (d Duration) Years() float64 {
-	return float64(d) / float64(Year)
+	if !d.IsFinite {
+		return math.Inf(0)
+	}
+	return float64(d.Duration) / float64(Year)
 }
 
 // FormatOrderOfMagnitude formats duration to give an order of magnitude, or order maxorder, in a human-reading way based on the following rules:
@@ -75,19 +104,18 @@ func (d Duration) Years() float64 {
 //	*pd == nil // returns "infinite"
 //	*pd == 0 // returns "0"
 //	*pd <= 0 // returns a string started with a minus symbol
-func (pd *Duration) FormatOrderOfMagnitude(maxorder uint) (str string) {
-	if pd == nil {
+func (leftd Duration) FormatOrderOfMagnitude(maxorder uint) (str string) {
+	if !leftd.IsFinite {
 		return "infinite"
 	}
-	leftd := Duration(*pd)
-	if leftd == 0 {
+	if leftd.Duration == 0 {
 		return "0"
 	}
-	if leftd < 0 {
+	if leftd.Duration < 0 {
 		str = "-"
-		leftd = -leftd
+		leftd.Duration = -leftd.Duration
 	}
-	if time.Duration(leftd).Seconds() < 1 {
+	if leftd.Seconds() < 1 {
 		return str + "0s~"
 	}
 
@@ -104,22 +132,22 @@ func (pd *Duration) FormatOrderOfMagnitude(maxorder uint) (str string) {
 		switch i {
 		case 0: // years
 			cint = int(leftd.Years())
-			leftd = leftd - Duration(cint)*Duration(Year)
+			leftd.Duration = leftd.Duration - time.Duration(cint)*Year
 		case 1: // months
 			cint = int(leftd.Months())
-			leftd = leftd - Duration(cint)*Duration(Month)
+			leftd.Duration = leftd.Duration - time.Duration(cint)*Month
 		case 2: // days
 			cint = int(leftd.Days())
-			leftd = leftd - Duration(cint)*Duration(Day)
+			leftd.Duration = leftd.Duration - time.Duration(cint)*Day
 		case 3: // hours
-			cint = int(time.Duration(leftd).Hours())
-			leftd = leftd - Duration(cint)*Duration(time.Hour)
+			cint = int(leftd.Duration.Hours())
+			leftd.Duration = leftd.Duration - time.Duration(cint)*time.Hour
 		case 4: // minutes
-			cint = int(time.Duration(leftd).Minutes())
-			leftd = leftd - Duration(cint)*Duration(time.Minute)
+			cint = int(leftd.Duration.Minutes())
+			leftd.Duration = leftd.Duration - time.Duration(cint)*time.Minute
 		case 5: // seconds
-			cint = int(time.Duration(leftd).Seconds())
-			leftd = leftd - Duration(cint)*Duration(time.Second)
+			cint = int(leftd.Duration.Seconds())
+			leftd.Duration = leftd.Duration - time.Duration(cint)*time.Second
 		}
 		// increment order
 		if order > 0 {

@@ -101,7 +101,7 @@ func (pts *TimeSlice) FromMove(request time.Time, cap bool) {
 // The timeslice direction can change
 func (pts *TimeSlice) FromExtend(dur Duration) {
 	if !pts.From.IsZero() {
-		pts.To = pts.To.Add(time.Duration(dur))
+		pts.To = pts.To.Add(dur.Duration)
 	}
 }
 
@@ -133,7 +133,7 @@ func (pts *TimeSlice) ToMove(request time.Time, cap bool) {
 // The timeslice direction can change.
 func (pts *TimeSlice) ToExtend(dur Duration) {
 	if !pts.To.IsZero() {
-		pts.To = pts.To.Add(time.Duration(dur))
+		pts.To = pts.To.Add(dur.Duration)
 	}
 }
 
@@ -148,25 +148,39 @@ func (pts *TimeSlice) Shift(dur Duration) {
 //
 // Return a zero time if the timeslice has infinite boundaries
 func (ts TimeSlice) Middle() time.Time {
-	d := ts.Duration()
-	if d == nil {
+	if ts.IsInfinite() {
 		return time.Time{}
 	}
-	if *d == 0 {
+	d := ts.Duration()
+	if d.Duration == 0 {
 		return ts.From
 	}
-	return ts.From.Add(time.Duration(*d / 2.0))
+	return ts.From.Add(time.Duration(d.Duration / 2.0))
 }
 
 // Duration returns the timeslice duration.
-//   - returns nil if one boundary is an infifinte time.
 //   - returns zero if timeslice boundaries have the exact same times.
-func (ts TimeSlice) Duration() *Duration {
+func (ts TimeSlice) Duration() Duration {
+	var d Duration
 	if ts.From.IsZero() || ts.To.IsZero() {
-		return nil
+		return d
 	}
-	d := Duration(ts.To.Sub(ts.From))
-	return &d
+	d.Duration = ts.To.Sub(ts.From)
+	d.IsFinite = true
+	return d
+}
+
+// IsInfinite returns true if at least one boundary is a zero time
+func (ts TimeSlice) IsInfinite() bool {
+	if ts.From.IsZero() || ts.To.IsZero() {
+		return true
+	}
+	return false
+}
+
+// IsZero returns true if both bouraies are a zero time
+func (ts TimeSlice) IsZero() bool {
+	return ts.From.IsZero() && ts.To.IsZero()
 }
 
 // Truncate returns the result of rounding t down to a multiple of dur (since the zero time).
@@ -237,13 +251,13 @@ func (ts TimeSlice) Direction() Direction {
 //   - returns 0 if datetime is after the begining
 //   - returns 1 if datetime is before the end
 func (ts TimeSlice) Progress(datetime time.Time) (rate float64) {
-	pdur := ts.Duration()
-	if pdur == nil {
+	if ts.IsInfinite() {
 		return 0.5
 	}
 
-	rate = datetime.Sub(ts.From).Seconds() / time.Duration(*pdur).Seconds()
-	if *pdur < 0 {
+	dur := ts.Duration()
+	rate = datetime.Sub(ts.From).Seconds() / dur.Seconds()
+	if dur.Duration < 0 {
 		rate = -rate
 	}
 
@@ -263,20 +277,20 @@ func (ts TimeSlice) Progress(datetime time.Time) (rate float64) {
 // returns a zero time if the timeslice has an infinite duration.
 // If the timeslice is a single date then returns it.
 func (ts TimeSlice) WhatTime(rate float64) time.Time {
-	pdur := ts.Duration()
-	if pdur == nil {
+	if ts.IsInfinite() {
 		return time.Time{}
 	}
 
 	var t time.Time
-	dprog := float64(*pdur) * rate
+	dur := ts.Duration()
+	dprog := float64(dur.Duration) * rate
 	t = ts.From.Add(time.Duration(dprog))
 
 	// bount it within the timeslice boundaries
-	if *pdur > 0 && t.After(ts.To) || *pdur < 0 && t.Before(ts.To) {
+	if dur.Duration > 0 && t.After(ts.To) || dur.Duration < 0 && t.Before(ts.To) {
 		t = ts.To
 	}
-	if *pdur > 0 && t.Before(ts.From) || *pdur < 0 && t.After(ts.From) {
+	if dur.Duration > 0 && t.Before(ts.From) || dur.Duration < 0 && t.After(ts.From) {
 		t = ts.From
 	}
 	return t
@@ -296,20 +310,20 @@ func (ts TimeSlice) Split(d time.Duration) ([]TimeSlice, error) {
 	}
 
 	// check duration of ts
-	pdur := ts.Duration()
-	if pdur == nil {
+	if ts.IsInfinite() {
 		return []TimeSlice{}, errors.New("unable to split an infinite timeslice")
 	}
-	if *pdur < 0 {
+	dur := ts.Duration()
+	if dur.Duration < 0 {
 		d = -d
 	}
 
 	slices := make([]TimeSlice, 0)
 	for {
 		split := MakeTimeSlice(ts.From, d)
-		if *pdur > 0 && split.To.After(ts.To) || *pdur < 0 && split.To.Before(ts.To) {
+		if dur.Duration > 0 && split.To.After(ts.To) || dur.Duration < 0 && split.To.Before(ts.To) {
 			split.To = ts.To
-			if *split.Duration() != 0 {
+			if split.Duration().Duration != 0 {
 				slices = append(slices, split)
 			}
 			break
@@ -325,32 +339,30 @@ func (ts TimeSlice) Split(d time.Duration) ([]TimeSlice, error) {
 //   - returns MASK_NONE if the timeslice has infinite duration or maxScans = 0
 //   - returns MASK_SHORTEST if the timselice is a single date
 func (ts TimeSlice) GetScanMask(maxScans uint) (mask TimeMask) {
-	// check duration of ts
-	var d Duration
-	if pdur := ts.Duration(); pdur == nil || maxScans == 0 {
+	if ts.IsInfinite() || maxScans == 0 {
 		return MASK_NONE
-	} else {
-		d = *pdur
 	}
+
+	d := ts.Duration()
 	// returns MASK_SHORTEST if the timselice is a single date
-	if d == 0 {
+	if d.Duration == 0 {
 		return MASK_SHORTEST
 	}
 	// calculation on the absolute duration
-	if d < 0 {
-		d = -d
+	if d.Duration < 0 {
+		d.Duration = -d.Duration
 	}
 
 	//log.Printf("m=%f h=%f d=%f M=%f Y=%f ", time.Duration(d).Minutes(), time.Duration(d).Hours(), d.Days(), d.Months(), d.Years())
 
 	switch {
-	case time.Duration(d).Minutes() <= float64(maxScans):
+	case d.Minutes() <= float64(maxScans):
 		mask = MASK_MINUTE
-	case (time.Duration(d).Hours() * 4) <= float64(maxScans):
+	case (d.Hours() * 4) <= float64(maxScans):
 		mask = MASK_MINUTEx15
-	case (time.Duration(d).Hours() * 2) <= float64(maxScans):
+	case (d.Hours() * 2) <= float64(maxScans):
 		mask = MASK_HALFHOUR
-	case time.Duration(d).Hours() <= float64(maxScans):
+	case d.Hours() <= float64(maxScans):
 		mask = MASK_HOUR
 	case (d.Days() * 6) <= float64(maxScans):
 		mask = MASK_HOURx4

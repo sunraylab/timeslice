@@ -88,6 +88,16 @@ go get -u github.com/sunraylab/timeline@latest
 
 ## Changelog
 
+- v2.2.0:
+  - break with the v2.1, major change with Duration which is now embeding time.Duration rather than to be of his type. Add feat. Infinite durations.
+  add feat. timeslice.IsZero
+
+- v2.1.3:
+  - added IsZero
+
+- v2.1.2 : 
+  - String return an empty string for nil duration
+
 - v2.1.0:
   - Equal is replaced by Compare and returns a type, no more an int. + some refactoring
 
