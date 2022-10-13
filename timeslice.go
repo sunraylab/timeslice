@@ -22,6 +22,39 @@ const (
 	Chronological     Direction = 1
 )
 
+// 2 timeslices comparisons
+//   - EQUAL if equal and in the same direction.
+//   - DIFFERENT if not equal.
+//   - OPPOSITE if equal but in the opposite direction.
+type Compare uint8
+
+const (
+	DIFFERENT Compare = 0b00000000
+	EQUAL     Compare = 0b00000001
+	OPPOSITE  Compare = 0b00000010
+)
+
+// Binary flag defining the position of a time compared with a timeslice:
+//   - TS_UNDEF
+//   - TS_OUTSIDE
+//   - TS_BEFORE
+//   - TS_START
+//   - TS_INSIDE
+//   - TS_END
+//   - TS_AFTER
+type TimePosition int
+
+const (
+	TS_UNDEF  TimePosition = 0b00000000
+	TS_OUT    TimePosition = 0b00010001
+	TS_BEFORE TimePosition = 0b00010000
+	TS_START  TimePosition = 0b00001000
+	TS_WITHIN TimePosition = 0b00000100
+	TS_END    TimePosition = 0b00000010
+	TS_IN     TimePosition = 0b00001110
+	TS_AFTER  TimePosition = 0b00000001
+)
+
 // TimeSlice represents a range of times bounded by two dates (time.Time) From and To. Each boundary can be an infinite time.
 type TimeSlice struct {
 	From time.Time
@@ -139,6 +172,7 @@ func (pts *TimeSlice) ToExtend(dur Duration) {
 
 // Shift moves simultaneously both boundaries of the timeslice.
 // Move occurs only for finite boundaries.
+// Move to the past if dur is negative.
 func (pts *TimeSlice) Shift(dur Duration) {
 	pts.FromExtend(dur)
 	pts.ToExtend(dur)
@@ -170,6 +204,32 @@ func (ts TimeSlice) Duration() Duration {
 	return d
 }
 
+// WhereIs returns the position of t within the timeslice
+//   - returns zero if timeslice boundaries have the exact same times.
+func (ts TimeSlice) WhereIs(t time.Time) TimePosition {
+	if ts.From.IsZero() && ts.To.IsZero() {
+		return TS_UNDEF
+	}
+	var w TimePosition
+	if t.Equal(ts.From) {
+		w = w | TS_START
+	}
+	if t.Before(ts.From) {
+		w = w | TS_BEFORE
+	}
+	if t.Equal(ts.To) {
+		w = w | TS_END
+	}
+	if t.After(ts.To) {
+		w = w | TS_AFTER
+	}
+	if t.After(ts.From) && t.Before(ts.To) {
+		w = w | TS_WITHIN
+	}
+
+	return w
+}
+
 // IsInfinite returns true if at least one boundary is a zero time
 func (ts TimeSlice) IsInfinite() bool {
 	if ts.From.IsZero() || ts.To.IsZero() {
@@ -190,14 +250,6 @@ func (ts TimeSlice) Truncate(dur time.Duration) TimeSlice {
 	ts.To = ts.To.Truncate(dur)
 	return ts
 }
-
-type Compare uint8
-
-const (
-	DIFFERENT Compare = 0b00000000
-	EQUAL     Compare = 0b00000001
-	OPPOSITE  Compare = 0b00000010
-)
 
 // Compare checks if 2 timeslices start and end at the same times, event if they're in a different timezone.
 //   - returns EQUAL if equal and in the same direction.

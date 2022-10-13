@@ -214,3 +214,31 @@ func ExampleTimeMask_GetTimeFormat() {
 	// Next time t2=2008-11-30 21:12:59
 	// Streamlined output for t2 renders: Sun, Nov 30 21:12
 }
+
+func ExampleTimeSlice_WhereIs() {
+
+	// make a 24 hours time slice from 2008-10-30 21:12:59
+	tstart := time.Date(2008, 10, 30, 21, 12, 59, 0, time.UTC)
+	ts := MakeTimeSlice(tstart, time.Hour*24)
+	fmt.Println(ts)
+
+	t := tstart.Add(-time.Minute)
+	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	t = tstart
+	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	t = ts.Middle()
+	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	t = ts.To
+	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	t = ts.To.Add(time.Minute)
+	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+
+	// Output:
+	// { 20081030 21:12:59 UTC - 20081031 21:12:59 UTC : 1d }
+	// t=2008-10-30 21:11:59 position is    10000, in:false out:true
+	// t=2008-10-30 21:12:59 position is     1000, in:true out:false
+	// t=2008-10-31 09:12:59 position is      100, in:true out:false
+	// t=2008-10-31 21:12:59 position is       10, in:true out:false
+	// t=2008-10-31 21:13:59 position is        1, in:false out:true
+
+}
