@@ -161,7 +161,7 @@ func ExampleTimeSlice_GetScanMask() {
 	for i := 10; i > 0; i-- {
 		mask := ts.GetScanMask(12)
 		fmt.Printf("best scan mask:%12s <== Timeslice: %s\n", mask.String(), ts)
-		ts.ToExtend(ts.Duration().Adjust(-0.7))
+		ts.ToExtend(ts.Duration().Adjust(-0.7).Duration)
 	}
 
 	// Output:
@@ -242,3 +242,4 @@ func ExampleTimeSlice_WhereIs() {
 	// t=2008-10-31 21:13:59 position is        1, in:false out:true
 
 }
+

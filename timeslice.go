@@ -132,9 +132,9 @@ func (pts *TimeSlice) FromMove(request time.Time, cap bool) {
 //   - if *pts.From is infinite, then nothing occurs.
 //
 // The timeslice direction can change
-func (pts *TimeSlice) FromExtend(dur Duration) {
+func (pts *TimeSlice) FromExtend(dur time.Duration) {
 	if !pts.From.IsZero() {
-		pts.To = pts.To.Add(dur.Duration)
+		pts.To = pts.To.Add(dur)
 	}
 }
 
@@ -164,18 +164,31 @@ func (pts *TimeSlice) ToMove(request time.Time, cap bool) {
 //   - if *pts.To is infinite, then nothing occurs.
 //
 // The timeslice direction can change.
-func (pts *TimeSlice) ToExtend(dur Duration) {
+func (pts *TimeSlice) ToExtend(dur time.Duration) {
 	if !pts.To.IsZero() {
-		pts.To = pts.To.Add(dur.Duration)
+		pts.To = pts.To.Add(dur)
 	}
 }
 
 // Shift moves simultaneously both boundaries of the timeslice.
 // Move occurs only for finite boundaries.
 // Move to the past if dur is negative.
-func (pts *TimeSlice) Shift(dur Duration) {
-	pts.FromExtend(dur)
-	pts.ToExtend(dur)
+func (pts *TimeSlice) Shift(shiftby time.Duration) {
+	pts.FromExtend(shiftby)
+	pts.ToExtend(shiftby)
+}
+
+// ShiftIn moves simultaneously both boundaries of the timeslice and ensure the moved timeslice stays within tsbound.
+// Take into account directions.
+// Move occurs only for finite boundaries.
+// Move to the past if dur is negative.
+func (pts *TimeSlice) ShiftIn(shiftby time.Duration, tsbound TimeSlice) {
+//	dur := pts.Duration()
+
+	pts.FromExtend(shiftby)
+	pts.ToExtend(shiftby)
+
+// TODO	
 }
 
 // Middle returns the time at the middle of the timeslice.
@@ -286,6 +299,23 @@ func (ts TimeSlice) Direction() Direction {
 		return Chronological
 	default:
 		return Undefined
+	}
+}
+
+// Force direction swap from/to boundaries to make 
+// the timeslice in the requested direction.
+//
+// nothing is done is both boundaries are the same or are infinite
+func (pts *TimeSlice) ForceDirection(dir Direction) {
+	d := pts.Direction()
+	if d == Undefined {
+		return
+	}
+
+	if d != dir {
+		temp := pts.From
+		pts.From = pts.To
+		pts.To = temp
 	}
 }
 

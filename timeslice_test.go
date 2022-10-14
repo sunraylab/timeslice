@@ -84,3 +84,11 @@ func TestMiddle(t *testing.T) {
 		t.Errorf("Middle fails: want %v got %v", tim, got)
 	}
 }
+
+func TestShiftIn(t *testing.T) {
+
+	// from finite/notfinite
+	// to finite/notfinite
+	// chrono/antichrono
+
+}
