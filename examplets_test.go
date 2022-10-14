@@ -8,18 +8,18 @@ import (
 	"time"
 )
 
-func ExampleTimeSlice_FromMove_one() {
+func ExampleTimeSlice_MoveFromAt_one() {
 	// take a date and build a timeslice staring at this date and ending 7 days after
 	from := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 	ts := MakeTimeSlice(from, Week)
 	fmt.Println(ts)
 
 	// Move forward the begining by 4 days
-	ts.FromMove(ts.From.Add(Day*4), false)
+	ts.MoveFromAt(ts.From.Add(Day * 4))
 	fmt.Println(ts)
 
 	// Move fotrward again the begining by 4 days
-	ts.FromMove(ts.From.Add(Day*4), false)
+	ts.MoveFromAt(ts.From.Add(Day * 4))
 	fmt.Println(ts)
 
 	// Output:
@@ -28,54 +28,24 @@ func ExampleTimeSlice_FromMove_one() {
 	// { 20220109 UTC - 20220109 UTC : 0 }
 }
 
-func ExampleTimeSlice_ToMove_one() {
+func ExampleTimeSlice_MoveToAt_one() {
 	// take a date and build a timeslice staring at this date and ending 7 days after
 	from := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 	ts := MakeTimeSlice(from, Week)
 	fmt.Println(ts)
 
 	// Move backward the ending by 4 days
-	ts.ToMove(ts.To.Add(-Day*4), false)
+	ts.MoveToAt(ts.To.Add(-Day * 4))
 	fmt.Println(ts)
 
 	// Move backward again the ending by 4 days
-	ts.ToMove(ts.To.Add(-Day*4), false)
+	ts.MoveToAt(ts.To.Add(-Day * 4))
 	fmt.Println(ts)
 
 	// Output:
 	// { 20220101 UTC - 20220108 UTC : 7d }
 	// { 20220101 UTC - 20220104 UTC : 3d }
 	// { 20211231 UTC - 20211231 UTC : 0 }
-}
-
-func ExampleTimeSlice_FromMove_two() {
-	// take a date and build a timeslice staring at this date and ending 7 days after
-	from := time.Date(2022, 1, 6, 8, 0, 0, 0, time.UTC)
-	ts := MakeTimeSlice(from, Day)
-	fmt.Println(ts)
-	ts.FromMove(time.Date(2022, 1, 6, 9, 0, 0, 0, time.UTC), true)
-	fmt.Println(ts)
-	ts.FromMove(time.Date(2022, 1, 7, 9, 0, 0, 0, time.UTC), true)
-	fmt.Println(ts)
-	// Output:
-	// { 20220106 08:00:00 UTC - 20220107 08:00:00 UTC : 1d }
-	// { 20220106 09:00:00 UTC - 20220107 08:00:00 UTC : 23h }
-	// { 20220107 08:00:00 UTC - 08:00:00 : 0 }
-}
-
-func ExampleTimeSlice_ToMove_two() {
-	// take a date and build a timeslice staring at this date and ending 7 days after
-	from := time.Date(2022, 1, 6, 8, 0, 0, 0, time.UTC)
-	ts := MakeTimeSlice(from, Day)
-	fmt.Println(ts)
-	ts.ToMove(time.Date(2022, 1, 6, 9, 0, 0, 0, time.UTC), true)
-	fmt.Println(ts)
-	ts.ToMove(time.Date(2022, 1, 6, 7, 0, 0, 0, time.UTC), true)
-	fmt.Println(ts)
-	// Output:
-	// { 20220106 08:00:00 UTC - 20220107 08:00:00 UTC : 1d }
-	// { 20220106 08:00:00 UTC - 09:00:00 : 1h }
-	// { 20220106 08:00:00 UTC - 08:00:00 : 0 }
 }
 
 func ExampleTimeSlice_String() {
@@ -161,7 +131,7 @@ func ExampleTimeSlice_GetScanMask() {
 	for i := 10; i > 0; i-- {
 		mask := ts.GetScanMask(12)
 		fmt.Printf("best scan mask:%12s <== Timeslice: %s\n", mask.String(), ts)
-		ts.ToExtend(ts.Duration().Adjust(-0.7).Duration)
+		ts.ExtendTo(ts.Duration().Adjust(-0.7).Duration)
 	}
 
 	// Output:
@@ -242,4 +212,3 @@ func ExampleTimeSlice_WhereIs() {
 	// t=2008-10-31 21:13:59 position is        1, in:false out:true
 
 }
-

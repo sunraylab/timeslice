@@ -50,6 +50,12 @@ func Nanoseconds(nanoseconds float64) Duration {
 	return d
 }
 
+// Nanoseconds factory to build a new Duration converting a float64 into time.Duration
+func (d Duration) Abs() Duration {
+	d.Duration = d.Duration.Abs()
+	return d
+}
+
 // Adjust the duration accordint to the factor
 func (d Duration) Adjust(factor float64) Duration {
 	newdur := &Duration{}

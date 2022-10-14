@@ -88,6 +88,17 @@ go get -u github.com/sunraylab/timeline@latest
 
 ## Changelog
 
+- v2.3.0:
+  - new feature TimeSlice.ForceDirection() 
+  - new feature TimeSlice.ShiftIn() 
+  - new feature TimeSlice.Bound() 
+  - new feature Duration.Abd() 
+  - timeslice can now be used with chaining method
+  - change signature to use time.Duration rather than timeline.Duration every time we use it as a a parameter
+  - Extend and Move functions have been renamed with new signatures
+  - fix bug on Direction() when From boundaries was infinite
+  - fix bug on String where To boundaries was badly formated in some cases
+
 - v2.2.2:
   - add feature timeslice.WhereIs
 

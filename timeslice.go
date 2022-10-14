@@ -91,7 +91,7 @@ func (ts TimeSlice) String() string {
 			strfrom = ts.From.Format("20060102 15:04:05 MST")
 		}
 	}
-	if ts.From.IsZero() {
+	if ts.To.IsZero() {
 		strto = "future"
 	} else {
 		if ts.To.Hour() == 0 && ts.To.Minute() == 0 && ts.To.Second() == 0 {
@@ -106,89 +106,214 @@ func (ts TimeSlice) String() string {
 	return fmt.Sprintf("{ %s - %s : %s }", strfrom, strto, strdur)
 }
 
-// Moves the begining of the timeslice to the requested time.
+// Moves the begining of the timeslice to at time, Keeping the direction of the timeslice.
+// So adjust the end of the timeslice if at exceeds it.
 //
-// Postpone the end of the timeslice if the request time exceeds it, or
-// cap the request time to the end of the timeslice, according to the direction.
-//
-// In case of capped or postponed move the timeslice become a single date.
-func (pts *TimeSlice) FromMove(request time.Time, cap bool) {
-	if !pts.To.IsZero() {
-		if cap {
-			if (pts.Direction() == Chronological && request.After(pts.To)) || (pts.Direction() == AntiChronological && request.Before(pts.To)) {
-				request = pts.To
+//	if at is zero, the timeslice become infinite
+func (pts *TimeSlice) MoveFromAt(at time.Time) *TimeSlice {
+	if !pts.To.IsZero() && !at.IsZero() {
+		switch {
+		case pts.From.IsZero() || pts.From.Before(pts.To):
+			if at.After(pts.To) {
+				pts.To = at
 			}
-		} else {
-			if (pts.Direction() == Chronological && request.After(pts.To)) || (pts.Direction() == AntiChronological && request.Before(pts.To)) {
-				pts.To = request
+		case !pts.From.IsZero() && pts.To.Before(pts.From):
+			if at.Before(pts.To) {
+				pts.To = at
 			}
 		}
 	}
-	pts.From = request
+	pts.From = at
+	return pts
 }
 
-// FromExtend add the duration at the begining of the timeslice.
+// ExtendFrom add the duration at the begining of the timeslice.
 //   - if the duration is negative then the begining time moves backward.
 //   - if *pts.From is infinite, then nothing occurs.
 //
 // The timeslice direction can change
-func (pts *TimeSlice) FromExtend(dur time.Duration) {
+func (pts *TimeSlice) ExtendFrom(dur time.Duration) *TimeSlice {
 	if !pts.From.IsZero() {
-		pts.To = pts.To.Add(dur)
+		pts.From = pts.From.Add(dur)
 	}
+	return pts
 }
 
-// Moves the end of the timeslice to the requested time.
+// Bound a date within the timeslice.
 //
-// Move back the begining of the timeslice if the request time exceeds it, or
-// cap the request time to the begining of the timeslice, according to the direction.
-//
-// In case of capped or back move the timeslice become a single date.
-func (pts *TimeSlice) ToMove(request time.Time, cap bool) {
-	if !pts.From.IsZero() {
-		if cap {
-			if (pts.Direction() == Chronological && request.Before(pts.From)) || (pts.Direction() == AntiChronological && request.After(pts.From)) {
-				request = pts.From
+//	if thists.IsZero, returns t unchanged
+//	if t is zero, returns thists.From (or To if From is zero)
+func (thists TimeSlice) Bound(t time.Time) time.Time {
+	if thists.IsZero() {
+		return t
+	}
+	if t.IsZero() {
+		if !thists.From.IsZero() {
+			return thists.From
+		}
+		return thists.To
+	}
+
+	if !thists.From.IsZero() {
+		switch {
+		case thists.To.IsZero(): // infinie
+			if t.Before(thists.From) {
+				t = thists.From
 			}
-		} else {
-			if (pts.Direction() == Chronological && request.Before(pts.From)) || (pts.Direction() == AntiChronological && request.After(pts.From)) {
-				pts.From = request
+		case thists.To.After(thists.From): // chrono
+			if t.Before(thists.From) {
+				t = thists.From
+			}
+		case thists.To.Before(thists.From): // antichrono
+			if t.After(thists.From) {
+				t = thists.From
+			}
+		default: // single date
+			if !t.Equal(thists.From) {
+				t = thists.From
 			}
 		}
 	}
-	pts.To = request
+
+	if !thists.To.IsZero() {
+		switch {
+		case thists.From.IsZero(): // infinite
+			if t.After(thists.To) {
+				t = thists.To
+			}
+		case thists.To.After(thists.From): // chrono
+			if t.After(thists.To) {
+				t = thists.To
+			}
+		case thists.To.Before(thists.From): // antichrono
+			if t.Before(thists.To) {
+				t = thists.To
+			}
+		default: // single date
+			if !t.Equal(thists.To) {
+				t = thists.To
+			}
+		}
+	}
+	return t
 }
 
-// ToExtend add the duration at the end of the timeslice.
+// Moves the end of the timeslice to at time, Keeping the direction of the timeslice.
+// So adjust the begining of the timeslice if at exceeds it.
+//
+//	if at is zero, the timeslice become infinite
+func (pts *TimeSlice) MoveToAt(at time.Time) *TimeSlice {
+	if !pts.From.IsZero() && !at.IsZero() {
+		switch {
+		case pts.To.IsZero() || pts.To.After(pts.From):
+			if at.Before(pts.From) {
+				pts.From = at
+			}
+		case !pts.To.IsZero() && pts.To.Before(pts.From):
+			if at.After(pts.From) {
+				pts.From = at
+			}
+		}
+	}
+	pts.To = at
+	return pts
+}
+
+// ExtendTo add the duration at the end of the timeslice.
 //   - if the duration is negative then the end time moves backward.
 //   - if *pts.To is infinite, then nothing occurs.
 //
 // The timeslice direction can change.
-func (pts *TimeSlice) ToExtend(dur time.Duration) {
+func (pts *TimeSlice) ExtendTo(dur time.Duration) *TimeSlice {
 	if !pts.To.IsZero() {
 		pts.To = pts.To.Add(dur)
 	}
+	return pts
+}
+
+// Force direction swap from/to boundaries to make
+// the timeslice in the requested direction.
+//
+// nothing is done is both boundaries are the same or are infinite
+func (pts *TimeSlice) ForceDirection(dir Direction) *TimeSlice {
+	d := pts.Direction()
+	if d == Undefined {
+		return pts
+	}
+
+	if d != dir {
+		temp := pts.From
+		pts.From = pts.To
+		pts.To = temp
+	}
+	return pts
 }
 
 // Shift moves simultaneously both boundaries of the timeslice.
 // Move occurs only for finite boundaries.
 // Move to the past if dur is negative.
 func (pts *TimeSlice) Shift(shiftby time.Duration) {
-	pts.FromExtend(shiftby)
-	pts.ToExtend(shiftby)
+	pts.ExtendFrom(shiftby)
+	pts.ExtendTo(shiftby)
 }
 
 // ShiftIn moves simultaneously both boundaries of the timeslice and ensure the moved timeslice stays within tsbound.
 // Take into account directions.
 // Move occurs only for finite boundaries.
 // Move to the past if dur is negative.
-func (pts *TimeSlice) ShiftIn(shiftby time.Duration, tsbound TimeSlice) {
-//	dur := pts.Duration()
+//
+// Returns nil if toshift duration is longer than tsbound duration.
+//
+// There's is 25 combinations according to finit/infinite boundaries and direction
+func (toshift *TimeSlice) ShiftIn(shiftby time.Duration, tsbound TimeSlice) *TimeSlice {
+	// check valildity of the request
+	absdurtoshift := toshift.Duration().Abs()
+	absdurtsbound := tsbound.Duration().Abs()
+	if absdurtoshift.IsFinite && absdurtsbound.IsFinite && absdurtoshift.Duration > absdurtsbound.Duration {
+		return nil
+	}
 
-	pts.FromExtend(shiftby)
-	pts.ToExtend(shiftby)
+	// Shift both boundaries, when exist
+	toshift.ExtendFrom(shiftby)
+	toshift.ExtendTo(shiftby)
 
-// TODO	
+	// special cases
+	// a) tsbound has no boundaries, shift is always valid
+	// b) toshift has no boundaries, shift did nothing
+	if tsbound.IsZero() || toshift.IsZero() {
+		return toshift
+	}
+
+	// toshift must be between From and TO whatever the direction of tsbound
+	// to force it to chronological direction to reduce number of cases
+	tsbound.ForceDirection(Chronological)
+
+	// simlarly work on a chronological toshift.
+	// memorize its direction to reset it later on
+	dirtoshift := toshift.Direction()
+	tempshift := *toshift
+	tempshift.ForceDirection(Chronological)
+
+	// bound toshift
+	tempshift.From = tsbound.Bound(tempshift.From)
+	tempshift.To = tsbound.Bound(tempshift.To)
+
+	// ensure duration stay unchanged
+	if absdurtoshift.Duration > 0 {
+		if tempshift.From.Equal(tsbound.From) {
+			tempshift.To = tempshift.From.Add(absdurtoshift.Duration)
+		}
+		if tempshift.To.Equal(tsbound.To) {
+			tempshift.From = tempshift.To.Add(-absdurtoshift.Duration)
+		}
+	}
+
+	// restore the direction to toshift
+	if dirtoshift != Undefined {
+		tempshift.ForceDirection(dirtoshift)
+	}
+	*toshift = tempshift
+	return toshift
 }
 
 // Middle returns the time at the middle of the timeslice.
@@ -206,7 +331,9 @@ func (ts TimeSlice) Middle() time.Time {
 }
 
 // Duration returns the timeslice duration.
-//   - returns zero if timeslice boundaries have the exact same times.
+//
+//	returns zero if timeslice boundaries have the exact same times.
+//	returns zero if one or both boundaries are infinite, but the returned duration has the IsFinite flag to false.
 func (ts TimeSlice) Duration() Duration {
 	var d Duration
 	if ts.From.IsZero() || ts.To.IsZero() {
@@ -251,7 +378,7 @@ func (ts TimeSlice) IsInfinite() bool {
 	return false
 }
 
-// IsZero returns true if both bouraies are a zero time
+// IsZero returns true if both boundaries are zero time, both are infinite
 func (ts TimeSlice) IsZero() bool {
 	return ts.From.IsZero() && ts.To.IsZero()
 }
@@ -284,10 +411,7 @@ func (ts TimeSlice) Direction() Direction {
 	if ts.From.IsZero() && ts.To.IsZero() {
 		return Undefined
 	}
-	if ts.From.IsZero() {
-		return AntiChronological
-	}
-	if ts.To.IsZero() {
+	if ts.From.IsZero() || ts.To.IsZero() {
 		return Chronological
 	}
 
@@ -299,23 +423,6 @@ func (ts TimeSlice) Direction() Direction {
 		return Chronological
 	default:
 		return Undefined
-	}
-}
-
-// Force direction swap from/to boundaries to make 
-// the timeslice in the requested direction.
-//
-// nothing is done is both boundaries are the same or are infinite
-func (pts *TimeSlice) ForceDirection(dir Direction) {
-	d := pts.Direction()
-	if d == Undefined {
-		return
-	}
-
-	if d != dir {
-		temp := pts.From
-		pts.From = pts.To
-		pts.To = temp
 	}
 }
 
