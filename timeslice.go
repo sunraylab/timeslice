@@ -139,7 +139,7 @@ func (pts *TimeSlice) ExtendFrom(dur time.Duration) *TimeSlice {
 	return pts
 }
 
-// Bound a date within the timeslice.
+// Bound a time within the timeslice, and returns the bounded time
 //
 //	if thists.IsZero, returns t unchanged
 //	if t is zero, returns thists.From (or To if From is zero)
@@ -196,6 +196,22 @@ func (thists TimeSlice) Bound(t time.Time) time.Time {
 		}
 	}
 	return t
+}
+
+// BoundIn bound a timeslice within another timeslice, and returns the bounded timeslice
+//
+//	if thists.IsZero, reset ts to a zero timselice and retrun it.
+//	if tobound is zero, returns it as is.
+func (thists TimeSlice) BoundIn(tobound *TimeSlice) *TimeSlice {
+	if thists.IsZero() || tobound.IsZero() {
+		tobound.From = time.Time{}
+		tobound.To = time.Time{}
+		return tobound
+	}
+
+	tobound.From = thists.Bound(tobound.From)
+	tobound.To = thists.Bound(tobound.To)
+	return tobound
 }
 
 // Moves the end of the timeslice to at time, Keeping the direction of the timeslice.
@@ -345,25 +361,39 @@ func (ts TimeSlice) Duration() Duration {
 }
 
 // WhereIs returns the position of t within the timeslice
-//   - returns zero if timeslice boundaries have the exact same times.
+//
+//	returns undef is the timeslice is infinie on both boundaries
+//
+// Before and After must be considered according to the direction, so as before with and antichronological timeslice means later than the FROM time.
 func (ts TimeSlice) WhereIs(t time.Time) TimePosition {
-	if ts.From.IsZero() && ts.To.IsZero() {
+	if ts.IsZero() {
 		return TS_UNDEF
 	}
+
 	var w TimePosition
-	if t.Equal(ts.From) {
-		w = w | TS_START
+	var fafterFrom, fbeforeTrue bool
+
+	if !ts.From.IsZero() {
+		if t.Equal(ts.From) {
+			w = w | TS_START | TS_WITHIN
+		} else if (ts.To.After(ts.From) && t.Before(ts.From)) || (ts.To.Before(ts.From) && t.After(ts.From)) {
+			w = w | TS_BEFORE
+		} else {
+			fafterFrom = true
+		}
 	}
-	if t.Before(ts.From) {
-		w = w | TS_BEFORE
+
+	if !ts.To.IsZero() {
+		if t.Equal(ts.To) {
+			w = w | TS_END | TS_WITHIN
+		} else if (ts.To.After(ts.From) && t.After(ts.To)) || (ts.To.Before(ts.From) && t.Before(ts.To)) {
+			w = w | TS_AFTER
+		} else {
+			fbeforeTrue = true
+		}
 	}
-	if t.Equal(ts.To) {
-		w = w | TS_END
-	}
-	if t.After(ts.To) {
-		w = w | TS_AFTER
-	}
-	if t.After(ts.From) && t.Before(ts.To) {
+
+	if fafterFrom && fbeforeTrue {
 		w = w | TS_WITHIN
 	}
 

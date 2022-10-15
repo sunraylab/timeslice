@@ -83,10 +83,14 @@ The TimeMask type provides the following scanning possibilities:
 ## Installing 
 
 ```bash 
-go get -u github.com/sunraylab/timeline@latest
+go get -u github.com/sunraylab/timeline/v2@latest
 ```
 
 ## Changelog
+
+- v2.3.1:
+  - new feature TimeSlice.BoundIn() 
+  - fix bug on WhereIs with antichonological timeslice 
 
 - v2.3.0:
   - new feature TimeSlice.ForceDirection() 

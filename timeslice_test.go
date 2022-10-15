@@ -229,6 +229,7 @@ func FuzzShiftIn(f *testing.F) {
 			tsshift.To = tt.Add(Day * 2)
 		}
 
+		// test
 		tsshift0 := tsshift
 		tsboundres := tsbound
 		tsboundres.ForceDirection(Chronological)
@@ -251,5 +252,42 @@ func FuzzShiftIn(f *testing.F) {
 				t.Errorf("[%d] ShiftIn returs nil; 0:%v, bound:%v, shifted:%v", n, tsshift0, tsbound, tsshift)
 			}
 		}
+	})
+}
+
+func FuzzBoundIn(f *testing.F) {
+	// corpus
+	for dirts := 1; dirts >= -1; dirts-- {
+		for pos := -2; pos <= 2; pos++ {
+			f.Add(dirts, pos)
+		}
+	}
+
+	n := 0
+	// target
+	f.Fuzz(func(t *testing.T, dirts int, pos int) {
+		n++
+
+		// 1st parameter
+		ts := MakeTimeSlice(time.Date(2022, 06, 10, 0, 0, 0, 0, time.UTC), 6*Day)
+		if dirts == 0 {
+			ts.To = ts.From.Add(1 * time.Hour)
+		} else if dirts == -1 {
+			ts.ForceDirection(AntiChronological)
+		}
+
+		// 2nd parameter
+		tstocheck := MakeTimeSlice(time.Date(2022, 06, 12+3*pos, 0, 0, 0, 0, time.UTC), 2*Day)
+
+		// test
+		tstocheck0 := tstocheck
+		out := ts.BoundIn(&tstocheck)
+		if ts.WhereIs(out.From)&TS_IN == 0 {
+			t.Errorf("[%d] BoundIn From is out; ts:%v, tobound:%v, bounded:%v", n, ts, tstocheck0, out)
+		}
+		if ts.WhereIs(out.To)&TS_IN == 0 {
+			t.Errorf("[%d] BoundIn To is out; ts:%v, tobound:%v, bounded:%v", n, ts, tstocheck0, out)
+		}
+
 	})
 }
