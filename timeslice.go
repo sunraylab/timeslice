@@ -210,8 +210,16 @@ func (thists TimeSlice) BoundIn(tobound *TimeSlice) *TimeSlice {
 		return tobound
 	}
 
-	tobound.From = thists.Bound(tobound.From)
-	tobound.To = thists.Bound(tobound.To)
+	if tobound.From.IsZero() {
+		tobound.From = thists.From
+	} else {
+		tobound.From = thists.Bound(tobound.From)
+	}
+	if tobound.To.IsZero() {
+		tobound.To = thists.To
+	} else {
+		tobound.To = thists.Bound(tobound.To)
+	}
 	return tobound
 }
 
@@ -695,7 +703,6 @@ func (ts TimeSlice) FormatQuery() string {
 }
 
 // ParseFromToQuery parse a query string into a timeslice.
-
 func ParseFromToQuery(query string) (ts TimeSlice, err error) {
 	vals, err := url.ParseQuery(query)
 	if err != nil {

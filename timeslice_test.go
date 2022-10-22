@@ -125,7 +125,23 @@ func TestBound(t *testing.T) {
 	if !tbound.Equal(tsFiniteAntoChrono.From) {
 		t.Errorf("Bound fails: got %v", tbound)
 	}
+}
 
+func TestBoundIn(t *testing.T) {
+	ts1 := TimeSlice{
+		From: time.Date(2020, 12, 20, 14, 35, 0, 0, time.UTC),
+		To:   time.Date(2020, 12, 22, 14, 35, 0, 0, time.UTC),
+	}
+
+	ts2 := TimeSlice{
+		From: time.Date(2020, 12, 21, 14, 35, 0, 0, time.UTC),
+	}
+
+	// infinite ts
+	ts1.BoundIn(&ts2)
+	if ts2.To.IsZero() || ts2.Direction() == AntiChronological {
+		t.Error()
+	}
 }
 
 func TestMove(t *testing.T) {
