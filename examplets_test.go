@@ -87,7 +87,8 @@ func ExampleTimeSlice_WhatTime() {
 func ExampleTimeSlice() {
 
 	// take a 3 days timeslice, starting the 2022,1,6 at 7:30AM
-	ts := MakeTimeSlice(time.Date(2022, 1, 6, 7, 30, 0, 0, time.UTC), Day*3)
+	tzone := time.FixedZone("CEST", 0)
+	ts := MakeTimeSlice(time.Date(2022, 1, 6, 7, 30, 0, 0, tzone), Day*3)
 	fmt.Printf("A timeslice: %s\n", ts)
 
 	// get a scan mask to handle 10 steps max
@@ -98,7 +99,7 @@ func ExampleTimeSlice() {
 	var xgridtime time.Time
 	for ts.Scan(&xgridtime, mask, true); !xgridtime.IsZero(); ts.Scan(&xgridtime, mask, true) {
 		progress := ts.Progress(xgridtime)
-		fmt.Printf("%s ==> progress: %3.1f%%\n", xgridtime.Format("20060102 15:04:05"), progress*100)
+		fmt.Printf("%s ==> progress: %3.1f%%\n", xgridtime.Format("20060102 15:04:05 CEST"), progress*100)
 	}
 
 	// What is the time at the middle of this timeslice ?
@@ -110,21 +111,21 @@ func ExampleTimeSlice() {
 	fmt.Printf("the corresponding quarter starts: %v\n", quarter)
 
 	// Output:
-	// A timeslice: { 20220106 07:30:00 UTC - 20220109 07:30:00 UTC : 3d }
+	// A timeslice: { 20220106 07:30:00 CEST - 20220109 07:30:00 CEST : 3d }
 	// scan mask = half-day
-	// 20220106 07:30:00 ==> progress: 0.0%
-	// 20220106 12:00:00 ==> progress: 6.2%
-	// 20220107 00:00:00 ==> progress: 22.9%
-	// 20220107 12:00:00 ==> progress: 39.6%
-	// 20220108 00:00:00 ==> progress: 56.2%
-	// 20220108 12:00:00 ==> progress: 72.9%
-	// 20220109 00:00:00 ==> progress: 89.6%
-	// 20220109 07:30:00 ==> progress: 100.0%
-	// the middle of this timeslice is: 2022-01-07 19:30:00 +0000 UTC
-	// the corresponding quarter starts: 2022-01-01 00:00:00 +0000 UTC
+	// 20220106 07:30:00 CEST ==> progress: 0.0%
+	// 20220106 12:00:00 CEST ==> progress: 6.2%
+	// 20220107 00:00:00 CEST ==> progress: 22.9%
+	// 20220107 12:00:00 CEST ==> progress: 39.6%
+	// 20220108 00:00:00 CEST ==> progress: 56.2%
+	// 20220108 12:00:00 CEST ==> progress: 72.9%
+	// 20220109 00:00:00 CEST ==> progress: 89.6%
+	// 20220109 07:30:00 CEST ==> progress: 100.0%
+	// the middle of this timeslice is: 2022-01-07 19:30:00 +0000 CEST
+	// the corresponding quarter starts: 2022-01-01 00:00:00 +0000 CEST
 }
 
-func ExampleTimeSlice_GetScanMask() {
+func ExampleTimeSlice_GetScanMask_one() {
 
 	ts := MakeTimeSlice(time.Date(2008, 10, 31, 21, 0, 0, 0, time.UTC), Month*3)
 
@@ -147,11 +148,12 @@ func ExampleTimeSlice_GetScanMask() {
 	// best scan mask:      minute <== Timeslice: { 20081031 21:00:00 UTC - 21:02:35 : 2m35s }
 }
 
-func ExampleTimeMask_GetTimeFormat() {
+func ExampleTimeMask_GetTimeFormat_one() {
 
 	// according to a choosen date
-	t1 := time.Date(2008, 10, 30, 21, 12, 59, 0, time.UTC)
-	fmt.Printf("Choosen time t1=%s\n", t1.Format("2006-01-02 15:04:05"))
+	tzone := time.FixedZone("CEST", 0)
+	t1 := time.Date(2008, 10, 30, 21, 12, 59, 0, tzone)
+	fmt.Printf("Choosen time t1=%s\n", t1.Format("2006-01-02 15:04:05 MST"))
 
 	// format this date according to the mask
 	for mask := MASK_min; mask <= MASK_max; mask++ {
@@ -170,7 +172,7 @@ func ExampleTimeMask_GetTimeFormat() {
 	fmt.Printf("Streamlined output for t2 renders: %s\n", t2.Format(MASK_HOUR.GetTimeFormat(t2, t1)))
 
 	// Output:
-	// Choosen time t1=2008-10-30 21:12:59
+	// Choosen time t1=2008-10-30 21:12:59 CEST
 	// with mask:      minute, renders: 21:12
 	// with mask:  15 minutes, renders: 21:12
 	// with mask:   half-hour, renders: 21:12
@@ -183,6 +185,34 @@ func ExampleTimeMask_GetTimeFormat() {
 	// with mask:        year, renders: 2008
 	// Next time t2=2008-11-30 21:12:59
 	// Streamlined output for t2 renders: Sun, Nov 30 21:12
+}
+
+func ExampleTimeMask_GetTimeFormat_two() {
+
+	// according to a choosen date
+	tzone := time.FixedZone("CEST", 0)
+	tpast := time.Date(2008, 10, 30, 21, 12, 59, 0, tzone)
+	tnow := time.Date(2008, 10, 30, 23, 12, 59, 0, tzone)
+	fmt.Printf("Choosen times: past=%s; now=%s\n", tpast.Format("2006-01-02 15:04:05 MST"), tnow.Format("2006-01-02 15:04:05 MST"))
+
+	// format this date according to the mask
+	strfmtnow := MASK_DAY.GetTimeFormat(tnow, tpast)
+	strtnow := tnow.Format(strfmtnow)
+	fmt.Printf("streamlined formated time now: %s\n", strtnow)
+
+	// move on to next month in the timezone, but same day in UTC
+	tpast = tpast.Add(time.Hour * 26)
+	tnow = tnow.Add(time.Hour * 26)
+	fmt.Printf("Choosen times: past=%s; now=%s\n", tpast.Format("2006-01-02 15:04:05 MST"), tnow.Format("2006-01-02 15:04:05 MST"))
+	strfmtnow = MASK_DAY.GetTimeFormat(tnow, tpast)
+	strtnow = tnow.Format(strfmtnow)
+	fmt.Printf("streamlined formated time now: %s\n", strtnow)
+
+	// Output:
+	// Choosen times: past=2008-10-30 21:12:59 CEST; now=2008-10-30 23:12:59 CEST
+	// streamlined formated time now: Thu 30
+	// Choosen times: past=2008-10-31 23:12:59 CEST; now=2008-11-01 01:12:59 CEST
+	// streamlined formated time now: Nov, Sat 01
 }
 
 func ExampleTimeSlice_WhereIs() {
