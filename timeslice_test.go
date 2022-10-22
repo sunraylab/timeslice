@@ -291,3 +291,22 @@ func FuzzBoundIn(f *testing.F) {
 
 	})
 }
+
+func TestQuery(t *testing.T) {
+
+	var ts TimeSlice
+	ts.From = time.Date(2020, 02, 20, 12, 34, 56, 00, time.UTC)
+	ts.To = time.Date(2121, 01, 21, 01, 23, 45, 00, time.UTC)
+
+	out := ts.FormatQuery()
+	if out != "from=20200220-123456&to=21210121-012345" {
+		t.Error()
+	}
+	tsout, err := ParseFromToQuery(out)
+	if err != nil {
+		t.Error()
+	}
+	if tsout.Compare(ts) != EQUAL {
+		t.Error()
+	}
+}

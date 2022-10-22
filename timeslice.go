@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 )
 
@@ -684,4 +685,36 @@ func (ts TimeSlice) Scan(cursor *time.Time, mask TimeMask, fBoundaries bool) tim
 
 	*cursor = newcursor
 	return newcursor
+}
+
+// FormatQuery return a query string in the following format
+//
+//	"from=20060102-150405;to=20060102-150405"
+func (ts TimeSlice) FormatQuery() string {
+	return fmt.Sprintf("from=%s&to=%s", ts.From.UTC().Format("20060102-150405"), ts.To.UTC().Format("20060102-150405"))
+}
+
+// ParseFromToQuery parse a query string into a timeslice.
+
+func ParseFromToQuery(query string) (ts TimeSlice, err error) {
+	vals, err := url.ParseQuery(query)
+	if err != nil {
+		return TimeSlice{}, err
+	}
+
+	if froms, foundf := vals["from"]; foundf {
+		ts.From, err = time.Parse("20060102-150405", froms[0])
+		ts.From = ts.From.UTC()
+	}
+
+	if tos, foundt := vals["to"]; foundt {
+		ts.To, err = time.Parse("20060102-150405", tos[0])
+		ts.To = ts.To.UTC()
+	}
+
+	if ts.IsZero() {
+		err = errors.New("from or to parameters not found")
+	}
+
+	return ts, err
 }
