@@ -707,13 +707,9 @@ func ParseFromToQuery(query string) (ts TimeSlice, err error) {
 		ts.From = ts.From.UTC()
 	}
 
-	if tos, foundt := vals["to"]; foundt {
+	if tos, foundt := vals["to"]; foundt && err != nil {
 		ts.To, err = time.Parse("20060102-150405", tos[0])
 		ts.To = ts.To.UTC()
-	}
-
-	if ts.IsZero() {
-		err = errors.New("from or to parameters not found")
 	}
 
 	return ts, err
