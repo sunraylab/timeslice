@@ -87,9 +87,9 @@ func ExampleTimeSlice_WhatTime() {
 func ExampleTimeSlice() {
 
 	// take a 3 days timeslice, starting the 2022,1,6 at 7:30AM
-	tzone := time.FixedZone("CEST", 0)
+	tzone, _ := time.LoadLocation("CET")
 	ts := MakeTimeSlice(time.Date(2022, 1, 6, 7, 30, 0, 0, tzone), Day*3)
-	fmt.Printf("A timeslice: %s\n", ts)
+	fmt.Printf("A timeslice: %s\n", ts.String())
 
 	// get a scan mask to handle 10 steps max
 	mask := ts.GetScanMask(10)
@@ -99,7 +99,7 @@ func ExampleTimeSlice() {
 	var xgridtime time.Time
 	for ts.Scan(&xgridtime, mask, true); !xgridtime.IsZero(); ts.Scan(&xgridtime, mask, true) {
 		progress := ts.Progress(xgridtime)
-		fmt.Printf("%s ==> progress: %3.1f%%\n", xgridtime.Format("20060102 15:04:05 CEST"), progress*100)
+		fmt.Printf("%s ==> progress: %3.1f%%\n", xgridtime.Format("20060102 15:04:05 MST"), progress*100)
 	}
 
 	// What is the time at the middle of this timeslice ?
@@ -111,18 +111,18 @@ func ExampleTimeSlice() {
 	fmt.Printf("the corresponding quarter starts: %v\n", quarter)
 
 	// Output:
-	// A timeslice: { 20220106 07:30:00 CEST - 20220109 07:30:00 CEST : 3d }
+	// A timeslice: { 20220106 06:30:00 UTC - 20220109 06:30:00 UTC : 3d }
 	// scan mask = half-day
-	// 20220106 07:30:00 CEST ==> progress: 0.0%
-	// 20220106 12:00:00 CEST ==> progress: 6.2%
-	// 20220107 00:00:00 CEST ==> progress: 22.9%
-	// 20220107 12:00:00 CEST ==> progress: 39.6%
-	// 20220108 00:00:00 CEST ==> progress: 56.2%
-	// 20220108 12:00:00 CEST ==> progress: 72.9%
-	// 20220109 00:00:00 CEST ==> progress: 89.6%
-	// 20220109 07:30:00 CEST ==> progress: 100.0%
-	// the middle of this timeslice is: 2022-01-07 19:30:00 +0000 CEST
-	// the corresponding quarter starts: 2022-01-01 00:00:00 +0000 CEST
+	// 20220106 07:30:00 CET ==> progress: 0.0%
+	// 20220106 12:00:00 CET ==> progress: 6.2%
+	// 20220107 00:00:00 CET ==> progress: 22.9%
+	// 20220107 12:00:00 CET ==> progress: 39.6%
+	// 20220108 00:00:00 CET ==> progress: 56.2%
+	// 20220108 12:00:00 CET ==> progress: 72.9%
+	// 20220109 00:00:00 CET ==> progress: 89.6%
+	// 20220109 07:30:00 CET ==> progress: 100.0%
+	// the middle of this timeslice is: 2022-01-07 19:30:00 +0100 CET
+	// the corresponding quarter starts: 2022-01-01 00:00:00 +0100 CET
 }
 
 func ExampleTimeSlice_GetScanMask_one() {
@@ -151,7 +151,7 @@ func ExampleTimeSlice_GetScanMask_one() {
 func ExampleTimeMask_GetTimeFormat_one() {
 
 	// according to a choosen date
-	tzone := time.FixedZone("CEST", 0)
+	tzone, _ := time.LoadLocation("CET")
 	t1 := time.Date(2008, 10, 30, 21, 12, 59, 0, tzone)
 	fmt.Printf("Choosen time t1=%s\n", t1.Format("2006-01-02 15:04:05 MST"))
 
@@ -167,24 +167,24 @@ func ExampleTimeMask_GetTimeFormat_one() {
 	// the output more comprehensive.
 	// Usefull if you scan times thru a timeline and want to streamline the output
 	t2 := t1.Add(1 * time.Hour * 24 * 31)
-	fmt.Printf("Next time t2=%s\n", t2.Format("2006-01-02 15:04:05"))
+	fmt.Printf("Next time t2=%s\n", t2.Format("2006-01-02 15:04:05 MST"))
 
 	fmt.Printf("Streamlined output for t2 renders: %s\n", t2.Format(MASK_HOUR.GetTimeFormat(t2, t1)))
 
 	// Output:
-	// Choosen time t1=2008-10-30 21:12:59 CEST
+	// Choosen time t1=2008-10-30 21:12:59 CET
 	// with mask:      minute, renders: 21:12
 	// with mask:  15 minutes, renders: 21:12
 	// with mask:   half-hour, renders: 21:12
 	// with mask:        hour, renders: 21:12
 	// with mask:     4 hours, renders: 21:12
-	// with mask:    half-day, renders: Thu, 30 21:12
-	// with mask:         day, renders: Thu, 30
+	// with mask:    half-day, renders: Thu 30 21:12
+	// with mask:         day, renders: Thu 30
 	// with mask:       month, renders: Oct
-	// with mask:     quarter, renders: Oct
+	// with mask:     quarter, renders: 2008 Oct
 	// with mask:        year, renders: 2008
-	// Next time t2=2008-11-30 21:12:59
-	// Streamlined output for t2 renders: Sun, Nov 30 21:12
+	// Next time t2=2008-11-30 21:12:59 CET
+	// Streamlined output for t2 renders: Nov, Sun 30, 21:12
 }
 
 func ExampleTimeMask_GetTimeFormat_two() {
@@ -223,22 +223,21 @@ func ExampleTimeSlice_WhereIs() {
 	fmt.Println(ts)
 
 	t := tstart.Add(-time.Minute)
-	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	fmt.Printf("t=%s position is %23q, in:%6v, out:%6v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t).String(), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
 	t = tstart
-	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	fmt.Printf("t=%s position is %23q, in:%6v, out:%6v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t).String(), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
 	t = ts.Middle()
-	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	fmt.Printf("t=%s position is %23q, in:%6v, out:%6v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t).String(), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
 	t = ts.To
-	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	fmt.Printf("t=%s position is %23q, in:%6v, out:%6v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t).String(), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
 	t = ts.To.Add(time.Minute)
-	fmt.Printf("t=%s position is %8b, in:%v out:%v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
+	fmt.Printf("t=%s position is %23q, in:%6v, out:%6v\n", t.Format("2006-01-02 15:04:05"), ts.WhereIs(t).String(), ts.WhereIs(t)&TS_IN > 0, ts.WhereIs(t)&TS_OUT > 0)
 
 	// Output:
-	// { 20081030 21:12:59 UTC - 20081031 21:12:59 UTC : 1d }
-	// t=2008-10-30 21:11:59 position is    10000, in:false out:true
-	// t=2008-10-30 21:12:59 position is     1000, in:true out:false
-	// t=2008-10-31 09:12:59 position is      100, in:true out:false
-	// t=2008-10-31 21:12:59 position is       10, in:true out:false
-	// t=2008-10-31 21:13:59 position is        1, in:false out:true
-
+	// 	{ 20081030 21:12:59 UTC - 20081031 21:12:59 UTC : 1d }
+	// t=2008-10-30 21:11:59 position is          "OUT & BEFORE", in: false, out:  true
+	// t=2008-10-30 21:12:59 position is   "START & WITHIN & IN", in:  true, out: false
+	// t=2008-10-31 09:12:59 position is           "WITHIN & IN", in:  true, out: false
+	// t=2008-10-31 21:12:59 position is     "WITHIN & END & IN", in:  true, out: false
+	// t=2008-10-31 21:13:59 position is           "OUT & AFTER", in: false, out:  true
 }

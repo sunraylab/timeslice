@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,36 @@ const (
 	TS_AFTER  TimePosition = 0b00000001
 )
 
+func (tpos TimePosition) String() (str string) {
+
+	if tpos&TS_OUT > 0 {
+		str += "OUT & "
+	}
+	if tpos&TS_BEFORE > 0 {
+		str += "BEFORE & "
+	}
+	if tpos&TS_START > 0 {
+		str += "START & "
+	}
+	if tpos&TS_WITHIN > 0 {
+		str += "WITHIN & "
+	}
+	if tpos&TS_END > 0 {
+		str += "END & "
+	}
+	if tpos&TS_IN > 0 {
+		str += "IN & "
+	}
+	if tpos&TS_AFTER > 0 {
+		str += "AFTER & "
+	}
+	if str == "" {
+		str = "UNDEF"
+	}
+	str = strings.TrimSuffix(str, " & ")
+	return str
+}
+
 // TimeSlice represents a range of times bounded by two dates (time.Time) From and To. Each boundary can be an infinite time.
 type TimeSlice struct {
 	From time.Time
@@ -76,12 +107,28 @@ func MakeTimeSlice(dte time.Time, d time.Duration) TimeSlice {
 	return *ts
 }
 
-// String returns default formating: "{ from - to : duration }".
+// String returns default formating: "{ from - to : duration } in the UTC timezone".
+// To get it in local use Format()
 //
 // An infinite begining prints "past" and an infinite end prints "future".
 //   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
 //   - if a boundary does not have any year nor month nor day, then prints only the time.
 func (ts TimeSlice) String() string {
+	return ts.Format(false)
+}
+
+// String returns default formating: "{ from - to : duration } in local or UTC timezone".
+//
+// An infinite begining prints "past" and an infinite end prints "future".
+//   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
+//   - if a boundary does not have any year nor month nor day, then prints only the time.
+func (ts TimeSlice) Format(localtimezone bool) string {
+	if !localtimezone {
+		loc, _ := time.LoadLocation("UTC")
+		ts.From = ts.From.In(loc)
+		ts.To = ts.To.In(loc)
+	}
+
 	var strfrom, strto, strdur string
 	if ts.From.IsZero() {
 		strfrom = "past"

@@ -79,9 +79,18 @@ func (mask TimeMask) GetTimeFormat(newt time.Time, formert time.Time) (strfmt st
 	}
 	if formert.Month() != newt.Month() && mask < MASK_MONTH {
 		upfront = "Jan, "
+		if mask < MASK_DAY {
+			upfront += "Mon 02, "
+		}
 	}
 	if formert.Year() != newt.Year() && mask < MASK_YEAR {
 		upfront = "2006, "
+		if mask < MASK_QUARTER {
+			upfront += "Jan, "
+		}
+		if mask < MASK_DAY {
+			upfront += "Mon 02, "
+		}
 	}
 
 	strfmt = upfront + strfmt
