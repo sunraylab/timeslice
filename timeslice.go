@@ -38,11 +38,12 @@ const (
 
 // Binary flag defining the position of a time compared with a timeslice:
 //   - TS_UNDEF
-//   - TS_OUTSIDE
+//   - TS_OUT
 //   - TS_BEFORE
 //   - TS_START
-//   - TS_INSIDE
+//   - TS_WITHIN
 //   - TS_END
+//   - TS_IN
 //   - TS_AFTER
 type TimePosition int
 
@@ -422,7 +423,7 @@ func (ts TimeSlice) Duration() Duration {
 //
 // Before and After must be considered according to the direction, so as before with and antichronological timeslice means later than the FROM time.
 func (ts TimeSlice) WhereIs(t time.Time) TimePosition {
-	if ts.IsZero() {
+	if ts.IsZero() || t.IsZero() {
 		return TS_UNDEF
 	}
 
@@ -432,7 +433,7 @@ func (ts TimeSlice) WhereIs(t time.Time) TimePosition {
 	if !ts.From.IsZero() {
 		if t.Equal(ts.From) {
 			w = w | TS_START | TS_WITHIN
-		} else if (ts.To.After(ts.From) && t.Before(ts.From)) || (ts.To.Before(ts.From) && t.After(ts.From)) {
+		} else if (!ts.To.IsZero() && ((ts.To.After(ts.From) && t.Before(ts.From)) || (ts.To.Before(ts.From) && t.After(ts.From)))) || (ts.To.IsZero() && t.Before(ts.From)) {
 			w = w | TS_BEFORE
 		} else {
 			fafterFrom = true
@@ -442,18 +443,36 @@ func (ts TimeSlice) WhereIs(t time.Time) TimePosition {
 	if !ts.To.IsZero() {
 		if t.Equal(ts.To) {
 			w = w | TS_END | TS_WITHIN
-		} else if (ts.To.After(ts.From) && t.After(ts.To)) || (ts.To.Before(ts.From) && t.Before(ts.To)) {
+		} else if (!ts.From.IsZero() && ((ts.To.After(ts.From) && t.After(ts.To)) || (ts.To.Before(ts.From) && t.Before(ts.To)))) || (ts.From.IsZero() && t.After(ts.To)) {
 			w = w | TS_AFTER
 		} else {
 			fbeforeTrue = true
 		}
 	}
 
-	if fafterFrom && fbeforeTrue {
+	if (fafterFrom && ts.To.IsZero()) || (fbeforeTrue && ts.From.IsZero()) || (fafterFrom && fbeforeTrue) {
 		w = w | TS_WITHIN
 	}
 
 	return w
+}
+
+// IsOverlapping returns true if tsb overlaps tsa
+func (tsa TimeSlice) IsOverlapping(tsb TimeSlice) bool {
+	if tsa.IsZero() || tsb.IsZero() {
+		return false
+	}
+	// both have same infinite boundaries
+	if (tsa.To.IsZero() && tsb.To.IsZero()) || (tsa.From.IsZero() && tsb.From.IsZero()) {
+		return true
+	}
+
+	fromisin := tsa.WhereIs(tsb.From)&TS_IN > 0
+	toisin := tsa.WhereIs(tsb.To)&TS_IN > 0
+	if fromisin || toisin {
+		return true
+	}
+	return false
 }
 
 // IsInfinite returns true if at least one boundary is a zero time

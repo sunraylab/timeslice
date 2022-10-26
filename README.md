@@ -88,9 +88,10 @@ go get -u github.com/sunraylab/timeline/v2@latest
 
 ## Changelog
 
-- v2.4.0:
-  - new features TimeSlice.Query and ParseFromToQuery()
-  - bug fix on GetTimeFormet
+- v2.4.x:
+  - new features TimeSlice.Query() and ParseFromToQuery()
+  - new feature TimeSlice.IsOverlapping()
+  - bug fix on GetTimeFormat
 
 - v2.3.1:
   - new feature TimeSlice.BoundIn() 

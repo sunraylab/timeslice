@@ -326,3 +326,45 @@ func TestQuery(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestIsOverlapping(t *testing.T) {
+
+	// case: infinite ending boudaries
+	tsa := TimeSlice{From: time.Date(2022, 6, 10, 0, 0, 0, 0, time.UTC)}
+	tsb1 := TimeSlice{From: tsa.From.Add(-2 * Day)}
+	tsb2 := TimeSlice{From: tsa.From.Add(2 * Day)}
+	if !tsa.IsOverlapping(tsb1) || !tsa.IsOverlapping(tsb2) {
+		t.Error("infinite ending boundaries")
+	}
+
+	// case: infinite starting boundaries
+	tsa = TimeSlice{To: time.Date(2022, 6, 10, 0, 0, 0, 0, time.UTC)}
+	tsb1 = TimeSlice{To: tsa.To.Add(-2 * Day)}
+	tsb2 = TimeSlice{To: tsa.To.Add(2 * Day)}
+	if !tsa.IsOverlapping(tsb1) || !tsa.IsOverlapping(tsb2) {
+		t.Error("infinite starting boundaries")
+	}
+
+	// case: infinite opposite boundaries
+	tsa = TimeSlice{From: time.Date(2022, 6, 10, 0, 0, 0, 0, time.UTC)}
+	tsb1 = TimeSlice{To: tsa.From.Add(-2 * Day)}
+	tsb2 = TimeSlice{To: tsa.From.Add(2 * Day)}
+	if tsa.IsOverlapping(tsb1) || !tsa.IsOverlapping(tsb2) {
+		t.Error("infinite opposite boundaries")
+	}
+
+	// case: chronologic
+	tsa = TimeSlice{From: time.Date(2022, 6, 10, 0, 0, 0, 0, time.UTC), To: time.Date(2022, 6, 12, 0, 0, 0, 0, time.UTC)}
+	tsb1 = TimeSlice{From: tsa.From.Add(-5 * Day), To: tsa.To.Add(-5 * Day)}
+	tsb2 = TimeSlice{From: tsa.From.Add(-1 * Day), To: tsa.To.Add(-1 * Day)}
+	tsb3 := TimeSlice{From: tsa.From.Add(1 * Day), To: tsa.From.Add(1 * Day)}
+	tsb4 := TimeSlice{From: tsa.From.Add(+1 * Day), To: tsa.To.Add(+1 * Day)}
+	tsb5 := TimeSlice{From: tsa.From.Add(+5 * Day), To: tsa.To.Add(+5 * Day)}
+	if tsa.IsOverlapping(tsb1) || tsa.IsOverlapping(tsb5) {
+		t.Error("chronologic non overlapping")
+	}
+	if !tsa.IsOverlapping(tsb2) || !tsa.IsOverlapping(tsb3) || !tsa.IsOverlapping(tsb4) {
+		t.Error("chronologic overlapping")
+	}
+
+}
