@@ -146,7 +146,7 @@ func (ts TimeSlice) Format(localtimezone bool) string {
 		if ts.To.Hour() == 0 && ts.To.Minute() == 0 && ts.To.Second() == 0 {
 			strto = ts.To.Format("20060102 MST")
 		} else if ts.From.Year() == ts.To.Year() && ts.From.Month() == ts.To.Month() && ts.From.Day() == ts.To.Day() {
-			strto = ts.To.Format("15:04:05")
+			strto = ts.To.Format("15:04:05 MST")
 		} else {
 			strto = ts.To.Format("20060102 15:04:05 MST")
 		}
