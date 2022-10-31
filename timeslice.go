@@ -124,9 +124,14 @@ func (ts TimeSlice) String() string {
 //   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
 func (ts TimeSlice) Format(localtimezone bool) string {
 	if !localtimezone {
-		loc, _ := time.LoadLocation("UTC")
-		ts.From = ts.From.In(loc)
-		ts.To = ts.To.In(loc)
+		// loc, _ := time.LoadLocation("UTC")
+		// ts.From = ts.From.In(loc)
+		// ts.To = ts.To.In(loc)
+		ts.From = ts.From.UTC()
+		ts.To = ts.To.UTC()
+	} else {
+		ts.From = ts.From.Local()
+		ts.To = ts.To.Local()
 	}
 
 	var strfrom, strto, strdur string
@@ -160,8 +165,11 @@ func (ts TimeSlice) Format(localtimezone bool) string {
 //   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
 func (ts TimeSlice) FormatTo(localtimezone bool) (strtime string) {
 	if !localtimezone {
-		loc, _ := time.LoadLocation("UTC")
-		ts.To = ts.To.In(loc)
+		// loc, _ := time.LoadLocation("UTC")
+		// ts.To = ts.To.In(loc)
+		ts.To = ts.To.UTC()
+	} else {
+		ts.To = ts.To.Local()
 	}
 
 	if ts.To.IsZero() {
@@ -182,8 +190,9 @@ func (ts TimeSlice) FormatTo(localtimezone bool) (strtime string) {
 //   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
 func (ts TimeSlice) FormatFrom(localtimezone bool) (strtime string) {
 	if !localtimezone {
-		loc, _ := time.LoadLocation("UTC")
-		ts.From = ts.From.In(loc)
+		ts.From = ts.From.UTC()
+	} else {
+		ts.From = ts.From.Local()
 	}
 
 	if ts.From.IsZero() {
