@@ -118,11 +118,10 @@ func (ts TimeSlice) String() string {
 	return ts.Format(false)
 }
 
-// String returns default formating: "{ from - to : duration } in local or UTC timezone".
+// Format returns default formating: "{ from - to : duration } in local or UTC timezone".
 //
 // An infinite begining prints "past" and an infinite end prints "future".
 //   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
-//   - if a boundary does not have any year nor month nor day, then prints only the time.
 func (ts TimeSlice) Format(localtimezone bool) string {
 	if !localtimezone {
 		loc, _ := time.LoadLocation("UTC")
@@ -153,6 +152,50 @@ func (ts TimeSlice) Format(localtimezone bool) string {
 	}
 	strdur = ts.Duration().FormatOrderOfMagnitude(3)
 	return fmt.Sprintf("{ %s - %s : %s }", strfrom, strto, strdur)
+}
+
+// FormatTo returns default formating: "from" in local or UTC timezone.
+//
+// An infinite end prints "future".
+//   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
+func (ts TimeSlice) FormatTo(localtimezone bool) (strtime string) {
+	if !localtimezone {
+		loc, _ := time.LoadLocation("UTC")
+		ts.To = ts.To.In(loc)
+	}
+
+	if ts.To.IsZero() {
+		strtime = "future"
+	} else {
+		if ts.To.Hour() == 0 && ts.To.Minute() == 0 && ts.To.Second() == 0 {
+			strtime = ts.To.Format("20060102 MST")
+		} else {
+			strtime = ts.To.Format("20060102 15:04:05 MST")
+		}
+	}
+	return strtime
+}
+
+// FormatFrom returns default formating: "from" in local or UTC timezone.
+//
+// An infinite begining prints "past".
+//   - if a boundary does not have any hours nor minutes nor seconds, then prints only the date.
+func (ts TimeSlice) FormatFrom(localtimezone bool) (strtime string) {
+	if !localtimezone {
+		loc, _ := time.LoadLocation("UTC")
+		ts.From = ts.From.In(loc)
+	}
+
+	if ts.From.IsZero() {
+		strtime = "past"
+	} else {
+		if ts.From.Hour() == 0 && ts.From.Minute() == 0 && ts.From.Second() == 0 {
+			strtime = ts.From.Format("20060102 MST")
+		} else {
+			strtime = ts.From.Format("20060102 15:04:05 MST")
+		}
+	}
+	return strtime
 }
 
 // Moves the begining of the timeslice to at time, Keeping the direction of the timeslice.
