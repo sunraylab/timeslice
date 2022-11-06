@@ -519,9 +519,11 @@ func (tsa TimeSlice) IsOverlapping(tsb TimeSlice) bool {
 		return true
 	}
 
-	fromisin := tsa.WhereIs(tsb.From)&TS_IN > 0
-	toisin := tsa.WhereIs(tsb.To)&TS_IN > 0
-	if fromisin || toisin {
+	afromisin := tsa.WhereIs(tsb.From)&TS_IN > 0
+	atoisin := tsa.WhereIs(tsb.To)&TS_IN > 0
+	bfromisin := tsb.WhereIs(tsa.From)&TS_IN > 0
+	btoisin := tsb.WhereIs(tsa.To)&TS_IN > 0
+	if afromisin || atoisin || bfromisin || btoisin {
 		return true
 	}
 	return false

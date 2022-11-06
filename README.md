@@ -94,6 +94,7 @@ go get -u github.com/sunraylab/timeline/v2@latest
   - new features TimeSlice.FormatFrom and TimeSlice.FormatTo
   - bug fix on GetTimeFormat
   - new time min/max helpers
+  - fix Isoverlapping
 
 - v2.3.1:
   - new feature TimeSlice.BoundIn() 
