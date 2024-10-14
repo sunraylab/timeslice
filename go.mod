@@ -1,3 +1,3 @@
-module github.com/sunraylab/timeline/v2
+module github.com/larry868/timeline/v2
 
-go 1.19
+go 1.23

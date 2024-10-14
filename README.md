@@ -88,6 +88,9 @@ go get -u github.com/sunraylab/timeline/v2@latest
 
 ## Changelog
 
+- v2.5.0:
+  - migration to go 1.23 and transfer ownership to larry868
+
 - v2.4.x:
   - new features TimeSlice.Query() and ParseFromToQuery()
   - new feature TimeSlice.IsOverlapping()
